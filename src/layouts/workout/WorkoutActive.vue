@@ -1,9 +1,9 @@
 <script setup>
-import Excercise from './Excercise.vue';
+import Excercise from '../../components/workout/Excercise.vue';
 import ExcerciseSearch from './ExcerciseSearch.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { ReadFile, AppendFile } from '../scripts/Filesystem';
+import { ReadFile, AppendFile } from '../../scripts/Filesystem';
 
 const props = defineProps({
     title: {type: String, default: 'New Workout'},

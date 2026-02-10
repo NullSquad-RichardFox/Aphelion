@@ -1,7 +1,7 @@
 <script setup>
 import {ref, onMounted, computed, onUnmounted} from 'vue'
-import { ReadFile, WriteFile } from '../scripts/Filesystem';
-import { uuid } from '../scripts/Utilities';
+import { ReadFile, WriteFile } from '../../scripts/Filesystem';
+import { uuid } from '../../scripts/Utilities';
 
 import ExcerciseCreator from './ExcerciseCreator.vue';
 

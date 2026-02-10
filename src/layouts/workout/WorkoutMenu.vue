@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, useTemplateRef } from 'vue'
 import { createGesture } from '@ionic/vue'
-import { ReadFile } from '../scripts/Filesystem';
+import { ReadFile } from '../../scripts/Filesystem.js';
 
 const emit = defineEmits(['openWorkout']);
 
@@ -14,15 +14,18 @@ const addAnimTranslate = ref(0);
 
 onMounted(() => {
     ReadFile('workoutTemplates.txt').then((v) => {
-        data.value = Array(v);
-        showAddWorkout.value = data.length == 0;
+        if (v != null ) {
+            data.value = Array();
+        }
+
+        showAddWorkout.value = data.value.length == 0;
     });
 
     const gesture = createGesture({
         el: addGestureHandle.value,
         threshold: 0,
         gestureName: 'add-el-drag',
-        onMove
+        onMove: (e) => onMove(e)
     });
 
     const onMove = (e) => {
@@ -67,7 +70,7 @@ const createWorkout = () => {
         <div class="all-workouts" ref="vec">
             <div class="workout-item" v-for="(item, index) in data" @click="workoutPicked(index)" :style="{'transform': 'translateY(' + addAnimTranslate + 'px)'}">
                 <p>{{ item.name }}</p>
-                <img src="../assets/editIcon.png" alt="" class="workout-edit">
+                <img src="../../assets/editIcon.png" alt="" class="workout-edit">
             </div>
             <div v-if="showAddWorkout" class="workout-item centered" @click="openNewWorkout = true">
                 <p>+</p>

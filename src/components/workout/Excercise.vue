@@ -1,7 +1,7 @@
 <script setup>
-    import { useTemplateRef } from 'vue'
+    import { useTemplateRef, ref, onMounted } from 'vue'
     import { createGesture } from '@ionic/vue'
-    import { clamp } from '../scripts/Utilities.js'
+    import { clamp } from '../../scripts/Utilities.js'
 
     const props = defineProps({
         excerciseTitle: String,
@@ -16,8 +16,31 @@
     const headerHandle = useTemplateRef('header');
     const containerHandle = useTemplateRef('container');
 
+    onMounted(() => {
+        const swipeGesture = createGesture({
+            el: headerHandle.value,
+            threshold: 2,
+            direction: 'x',
+            gestureName: 'swipe-excercise',
+            onStart: (e) => swipeGestureStart(e),
+            onMove: (e) => swipeGestureMove(e),
+            onEnd: (e) => swipeGestureEnd(e)
+        });
+
+        const holdGesture = createGesture({
+            el: headerHandle.value,
+            threshold: 0,
+            gestureName: 'hold-excercise',
+            onMove: (e) => holdGestureMove(e),
+            onEnd: (e) => holdGestureEnd(e)
+        });
+
+        swipeGesture.enable(true);
+        holdGesture.enable(true);
+
     const swipeGestureStart = (e) => {
         swipeGestureContainer.enable(false);
+        console.log('start')
     };
 
     const swipeGestureMove = (e) => {
@@ -66,28 +89,6 @@
         swipeGesture.enable(true);
     };
 
-    onMounted(() => {
-        const swipeGesture = createGesture({
-            el: headerHandle.value,
-            threshold: 2,
-            direction: 'x',
-            gestureName: 'swipe-excercise',
-            onStart: (e) => swipeGestureStart(e),
-            onMove: (e) => swipeGestureMove(e),
-            onEnd: (e) => swipeGestureEnd(e)
-        });
-
-        const holdGesture = createGesture({
-            el: headerHandle.value,
-            threshold: 0,
-            gestureName: 'hold-excercise',
-            onMove: (e) => holdGestureMove(e),
-            onEnd: (e) => holdGestureEnd(e)
-        });
-
-        swipeGesture.enable(true);
-        holdGesture.enable(true);
-
         const swipeGestureContainer = createGesture({
             el: containerHandle.value,
             threshold: 2,
@@ -98,20 +99,20 @@
             onEnd: (e) => swipeContainerEnd(e)
         });
 
-        swipeGestureContainer.enable(true);
+        //swipeGestureContainer.enable(true);
     });
 
 </script>
 
 <template>
-    <div class="frame" :style="{'transform': 'translateX(' + frameTranslate + 'px);'}">
+    <div class="frame" :style="{'transform': 'translateX(' + frameTranslate + 'px)'}">
         <div class="head" ref="header">
             <p class="title">{{ props.excerciseTitle }}</p>
-            <img src="../assets/editIcon.png" alt="" class="edit-icon">
+            <img src="../../assets/editIcon.png" alt="" class="edit-icon">
         </div>
 
         <div class="container" v-for="(item, index) in props.excerciseData" ref="container">
-            <div class="set" :class="{active: item.active}" :style="[item.isPr ? 'border-color: #E6B617' : 'border-color: #eee', 'transfomr': 'translateY(' + containerTranslate + 'px);']">
+            <div class="set glass" :class="{active: item.active}" :style="{borderColor: item.isPr ? '#E6B617' : '#eee', transform: 'translateY(' + containerTranslate + 'px)'}">
                 <p>{{ index + 1}}</p>
                 <p>{{ item.reps }} reps</p>
                 <p v-if="!editMode">{{item.weight}}kg</p>
@@ -119,7 +120,7 @@
         </div>
 
         <div class="container" v-if="props.excerciseData.length == 0">
-            <div class="add" @click="emit('addSet')">
+            <div class="add" @click="emit('addSet', false)">
                 <p>+</p>
             </div>
         </div>
@@ -161,8 +162,11 @@
 .set {
     display: flex;
     justify-content: space-between;
-    border-radius: 1px;
-    background-color: rgba(225, 225, 225, 0.071);
+    border-radius: 5px;
+    box-shadow: 
+        inset 0 0 5px #fff,
+        0 0 50px #fff,
+        -10px 0 80px #f0f;
 }
 
 .active {
@@ -186,13 +190,32 @@
     color: #eeeeee;
 }
 
-.glass {
-    background: rgba(135, 232, 234, 0.11);
-    border-radius: 16px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    border: 1px solid rgba(135, 232, 234, 0.8);
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: true;
 }
 
+.glass {
+    background: rgba(135, 232, 234, 0.11);
+    border-radius: 2px;
+    box-shadow: 
+            inset 0 0 10px #ffd0006e,
+        0 0 5px #ffd0006e,
+        0px 0 10px #ffd0003b,
+        0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid;
+    border-image-source: conic-gradient(from var(--angle), red, blue, red);
+    border-image-slice: 1;
+    animation: rotate 4s linear infinite;
+}
+
+
+@keyframes rotate {
+    100% {
+        --angle: 360deg;
+    }
+}
 </style>
