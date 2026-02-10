@@ -36,7 +36,7 @@ onMounted(() => {
             for (const item of props.data) {
                 let sets = []
                 for (let i = 0; i < item[1]; i++) {
-                    sets.push({reps: 12, weight: 0, active: false, isPr: false})
+                    sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false});
                 }
                 
                 if (allExcercises.value.has(item[0])) {
@@ -93,9 +93,12 @@ const addExcercise = (id) => {
         } else {
             console.error('Excercise not present', id);
         }
-    });
-    
-}
+    });   
+};
+
+const addSet = (item, warmUp) => {
+    item.excSets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp})
+};
 
 </script>
 
@@ -105,7 +108,7 @@ const addExcercise = (id) => {
         <p class="title">{{ props.title }}</p>
         <p class="timer" v-if="!editMode">{{ timeString }}</p>
         <div class="space"></div>
-        <Excercise class="exc-container" v-for="item in data" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="item.excSets.push({reps: 12, weight: 0, active: false, isPr: false})"/>
+        <Excercise class="exc-container" v-for="item in data" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
         <div class="control-panel">
             <div class="add-excercise button-style" @click="showSearchMenu = true">+</div>
             <div class="workout-stop-panel">

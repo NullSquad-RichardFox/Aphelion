@@ -81,6 +81,15 @@ function ResetData() {
     })
 }
 
+function GetAllFiles() {
+    Filesystem.readdier({
+        path: '',
+        directory: Directory.Documents
+    }).then((v) => {
+        return v.files;
+    })
+}
+
 export {
-    ReadFile, WriteFile, AppendFile, ResetData
+    ReadFile, WriteFile, AppendFile, ResetData, GetAllFiles
 }

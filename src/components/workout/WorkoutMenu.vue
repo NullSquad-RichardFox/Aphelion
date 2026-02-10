@@ -7,26 +7,29 @@ const emit = defineEmits(['openWorkout']);
 
 const data = ref([]);
 const openNewWorkout = ref(false);
+const showAddWorkout = ref(false);
 const workoutName = ref('');
 const addGestureHandle = useTemplateRef('vec');
 const addAnimTranslate = ref(0);
 
 onMounted(() => {
     ReadFile('workoutTemplates.txt').then((v) => {
-        if (v != null ) {
-            data.value = Array(v);
-        }
+        data.value = Array(v);
+        showAddWorkout.value = data.length == 0;
     });
 
     const gesture = createGesture({
         el: addGestureHandle.value,
         threshold: 0,
         gestureName: 'add-el-drag',
-        onMove: (event) => onMove(event)
+        onMove
     });
 
     const onMove = (e) => {
         addAnimTranslate.value = Math.max(-42, Math.min(0, addAnimTranslate.value + e.deltaY));
+        if (addAnimTranslate.value == -42) {            
+            showAddWorkout.value = true;
+        }
     };
 
     gesture.enable(true);
@@ -66,7 +69,7 @@ const createWorkout = () => {
                 <p>{{ item.name }}</p>
                 <img src="../assets/editIcon.png" alt="" class="workout-edit">
             </div>
-            <div v-if="data.length == 0" class="workout-item centered" @click="openNewWorkout = true">
+            <div v-if="showAddWorkout" class="workout-item centered" @click="openNewWorkout = true">
                 <p>+</p>
             </div>
         </div>
