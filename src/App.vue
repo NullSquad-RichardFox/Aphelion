@@ -31,22 +31,8 @@ const openWorkout = (name, exc, sets) => {
     <Profile/>
     <Footer/>
     
-    <img src="./assets/background.jpg" alt="" class="background">
 </template>
 
-<style scoped>
-
-.background {
-    position: absolute;
-    object-fit: contain;
-    image-orientation: from-image;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -999;
-    transform: scale(4);
-    filter: grayscale(0.7);
-}
+<style scoped> 
 
 </style>

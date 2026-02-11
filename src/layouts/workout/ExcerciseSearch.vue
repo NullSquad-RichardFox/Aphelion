@@ -1,7 +1,7 @@
 <script setup>
 import {ref, onMounted, computed, onUnmounted} from 'vue'
-import { ReadFile, WriteFile } from '../../scripts/Filesystem';
-import { uuid } from '../../scripts/Utilities';
+import { readFile, writeFile } from '../../scripts/filesystem';
+import { uuid } from '../../scripts/utilities';
 
 import ExcerciseCreator from './ExcerciseCreator.vue';
 
@@ -14,11 +14,11 @@ const showExcerciseCreator = ref(false);
 
 const excerciseCreated = (title, muscles) => {
     allExcercises.value.set(uuid(), {name: title, musclesUsed: muscles, data: []});
-    WriteFile('excercises.txt', JSON.stringify(Array.from(allExcercises.value.entries())));
+    writeFile('excercises.txt', JSON.stringify(Array.from(allExcercises.value.entries())));
 };
 
 onMounted(() => {
-    ReadFile('excercises.txt').then((file) => {
+    readFile('excercises.txt').then((file) => {
         allExcercises.value = new Map(file);
     })
 });

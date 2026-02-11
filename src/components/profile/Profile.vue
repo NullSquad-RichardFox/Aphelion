@@ -31,8 +31,8 @@ const profileClicked = () => {
     width: 50px;
     justify-content: center;
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 2rem;
+    right: 20px;
 }
 
 .profile-button {

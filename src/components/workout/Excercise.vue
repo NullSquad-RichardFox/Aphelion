@@ -1,7 +1,5 @@
 <script setup>
-    import { useTemplateRef, ref, onMounted } from 'vue'
-    import { createGesture } from '@ionic/vue'
-    import { clamp } from '../../scripts/Utilities.js'
+    import { onMounted } from 'vue'
 
     const props = defineProps({
         excerciseTitle: String,
@@ -11,117 +9,34 @@
 
     const emit = defineEmits(['addSet']);
 
-    const frameTranslate = ref(0);
-    const containerTranslate = ref(0);
-    const headerHandle = useTemplateRef('header');
-    const containerHandle = useTemplateRef('container');
-
     onMounted(() => {
-        const swipeGesture = createGesture({
-            el: headerHandle.value,
-            threshold: 2,
-            direction: 'x',
-            gestureName: 'swipe-excercise',
-            onStart: (e) => swipeGestureStart(e),
-            onMove: (e) => swipeGestureMove(e),
-            onEnd: (e) => swipeGestureEnd(e)
-        });
-
-        const holdGesture = createGesture({
-            el: headerHandle.value,
-            threshold: 0,
-            gestureName: 'hold-excercise',
-            onMove: (e) => holdGestureMove(e),
-            onEnd: (e) => holdGestureEnd(e)
-        });
-
-        swipeGesture.enable(true);
-        holdGesture.enable(true);
-
-    const swipeGestureStart = (e) => {
-        swipeGestureContainer.enable(false);
-        console.log('start')
-    };
-
-    const swipeGestureMove = (e) => {
-        frameTranslate.value = clamp(frameTranslate.value + e.deltaX, -15, 15);
-    };
-
-    const swipeGestureEnd = (e) => {
-        if (e.deltaX >= 15) {
-            // remove
-        } else if (e.deltaX <= -15) {
-            // switch
-        }
-
-        // return anim
-        frameTranslate.value = 0;
-
-        swipeGestureContainer.enable(true);
-    };
-
-    const holdGestureMove = (e) => {
-
-    };
-
-    const holdGestureEnd = (e) => {
-
-    };
-
-    const swipeContainerStart = (e) => {
-        swipeGesture.enable(false);
-    };
-
-    const swipeContainerMove = (e) => {
-        containerTranslate.value = clamp(containerTranslate.value + e.deltaY, -30, 30);
-    };
-
-    const swipeContainerEnd = (e) => {
-        if (e.deltaY >= 30) {
-            emit('addSet', true);
-        } else if (e.deltaY <= -30) {
-            emit('addSet', false);
-        } 
-
-        // return anim
-        containerTranslate.value = 0;
-
-        swipeGesture.enable(true);
-    };
-
-        const swipeGestureContainer = createGesture({
-            el: containerHandle.value,
-            threshold: 2,
-            direction: 'y',
-            gestureName: 'swipe-gesture-container',
-            onStart: (e) => swipeContainerStart(e),
-            onMove: (e) => swipeContainerMove(e),
-            onEnd: (e) => swipeContainerEnd(e)
-        });
-
-        //swipeGestureContainer.enable(true);
     });
+
+    const itemClicked = (item) => {
+        item.active = !item.active;
+    }
 
 </script>
 
 <template>
-    <div class="frame" :style="{'transform': 'translateX(' + frameTranslate + 'px)'}">
-        <div class="head" ref="header">
+    <div class="frame">
+        <div style="margin: 0.5rem;">
             <p class="title">{{ props.excerciseTitle }}</p>
-            <img src="../../assets/editIcon.png" alt="" class="edit-icon">
         </div>
 
-        <div class="container" v-for="(item, index) in props.excerciseData" ref="container">
-            <div class="set glass" :class="{active: item.active}" :style="{borderColor: item.isPr ? '#E6B617' : '#eee', transform: 'translateY(' + containerTranslate + 'px)'}">
-                <p>{{ index + 1}}</p>
-                <p>{{ item.reps }} reps</p>
-                <p v-if="!editMode">{{item.weight}}kg</p>
+        <div class="header-decoration"></div>
+
+        <div class="container" v-for="(item, index) in props.excerciseData">
+            <div class="set" :class="[{'glass': item.active},{'glass-accent': item.isPr}]" @click="itemClicked(item)">
+                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ index + 1}}</p>
+                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ item.reps }} reps</p>
+                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-if="!editMode">{{item.weight}}kg</p>
             </div>
         </div>
 
-        <div class="container" v-if="props.excerciseData.length == 0">
-            <div class="add" @click="emit('addSet', false)">
-                <p>+</p>
+        <div class="container" v-if="true">
+            <div @click="emit('addSet', false)">
+                <p class="item-text">+</p>
             </div>
         </div>
     </div>
@@ -131,15 +46,6 @@
 .frame {
     margin: 0 2em;
     padding: 0;
-    border: 1px #eeeeee solid;
-    border-radius: 4px;
-    background-color: rgba(225, 225, 225, 0.071);
-}
-
-.head {
-    display: flex;
-    justify-content: space-between;
-    margin: 0.5rem;
 }
 
 .title {
@@ -149,45 +55,30 @@
     color: #eeeeee;
 }
 
-.edit-icon {
-    width: 37.5px;    
-    height: 37.5px;
-    filter: invert(99%) sepia(6%) saturate(25%) hue-rotate(239deg) brightness(109%) contrast(87%);
+.header-decoration {
+    width: 100%;
+    height: 2px;
+    background-color: #eee;
 }
 
 .container {
     margin: 0.5rem;
+    margin-left: 1.5rem;
 }
 
 .set {
     display: flex;
     justify-content: space-between;
-    border-radius: 5px;
-    box-shadow: 
-        inset 0 0 5px #fff,
-        0 0 50px #fff,
-        -10px 0 80px #f0f;
 }
 
-.active {
-    border: 1px #eeeeee solid;
-}
-
-.set p {
+.item-text {
     margin: 0.2rem;
     font-size: 18px;
     color: #eeeeee;
 }
 
-.add {
-    border-radius: 1px;
-    background-color: rgba(225, 225, 225, 0.071);
-}
-
-.add p {
-    margin: 0.2rem;
-    font-size: 18px;
-    color: #eeeeee;
+.warm-up-text {
+    color: #5a5a5a !important;
 }
 
 @property --angle {
@@ -197,18 +88,32 @@
 }
 
 .glass {
-    background: rgba(135, 232, 234, 0.11);
-    border-radius: 2px;
-    box-shadow: 
-            inset 0 0 10px #ffd0006e,
-        0 0 5px #ffd0006e,
-        0px 0 10px #ffd0003b,
-        0 4px 30px rgba(0, 0, 0, 0.1);
+    background: #72727217;
+    
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    
+    border-radius: 2px;
+    border: 1px solid #eee;
+}
+
+.glass-accent { 
+    background: #ffd30f17;
+    
+    box-shadow: 
+    inset 0 0 5px #ffd0006e,
+    0 0 5px #ffd0006e,
+    0px 0 10px #ffd0003b,
+    0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    
     border: 1px solid;
-    border-image-source: conic-gradient(from var(--angle), red, blue, red);
+    border-image-source: conic-gradient(from var(--angle), #ffd30f, #ffd0006e, #ffd30f);
     border-image-slice: 1;
+    border-radius: 2px;
+    
     animation: rotate 4s linear infinite;
 }
 

@@ -1,6 +1,6 @@
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 
-function CheckOrRequestPermissions() {
+function checkOrRequestPermissions() {
     Filesystem.checkPermissions().then((v) => {
         if (v.publicStorage != 'granted') {
             Filesystem.requestPermissions();
@@ -8,8 +8,8 @@ function CheckOrRequestPermissions() {
     })
 }
 
-async function DoesFileExist(file) {
-    CheckOrRequestPermissions(); 
+async function doesFileExist(file) {
+    checkOrRequestPermissions(); 
 
     try {
         await Filesystem.readFile({
@@ -24,8 +24,8 @@ async function DoesFileExist(file) {
     }
 }
 
-async function ReadFile(file) {
-    if (await DoesFileExist(file)) {
+async function readFile(file) {
+    if (await doesFileExist(file)) {
         const f = await Filesystem.readFile({
             path: `${file}`,
             directory: Directory.Documents,
@@ -39,13 +39,13 @@ async function ReadFile(file) {
         }
 
     } else {
-        WriteFile(file, '');
+        writeFile(file, '');
         return null;
     }
 }
 
-function WriteFile(file, val) {
-    CheckOrRequestPermissions(); 
+function writeFile(file, val) {
+    checkOrRequestPermissions(); 
 
     Filesystem.writeFile({
         path: `${file}`,
@@ -55,33 +55,33 @@ function WriteFile(file, val) {
     })
 }
 
-function AppendFile(file, item) {
-    ReadFile().then((f) => {
+function appendFile(file, item) {
+    readFile().then((f) => {
         if (f == null) {
-            WriteFile(file, item);
+            writeFile(file, item);
         } else {
             try {
                 f.push(item);
             } catch {
                 f += item;
             }
-            WriteFile(file, f);
+            writeFile(file, f);
         }
     });
 }
 
-function ResetData() {
+function resetData() {
     Filesystem.readdir({
         path: '',
         directory: Directory.Documents
     }).then((v) => {
         for (file of v.files) {
-            WriteFile(file, '');
+            writeFile(file, '');
         }
     })
 }
 
-function GetAllFiles() {
+function getAllFiles() {
     Filesystem.readdier({
         path: '',
         directory: Directory.Documents
@@ -91,5 +91,5 @@ function GetAllFiles() {
 }
 
 export {
-    ReadFile, WriteFile, AppendFile, ResetData, GetAllFiles
+    readFile, writeFile, appendFile, resetData, getAllFiles
 }

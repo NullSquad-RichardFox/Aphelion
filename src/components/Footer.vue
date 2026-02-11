@@ -3,14 +3,8 @@ import { ref } from "vue"
 
 const emit = defineEmits(['cardio', 'gym', 'diet']);
 
-const activeId = ref(0)
-const haloPos = ref(-3.5)
-
-const elementClicked = (id) => {
-    activeId.value = id;
-    haloPos.value = -3.5 + id * 33.5;
-    console.log(activeId);
-}
+const activeId = ref(1)
+const haloPos = ref(30)
 
 const cardioClick = () => {
     activeId.value = 0;

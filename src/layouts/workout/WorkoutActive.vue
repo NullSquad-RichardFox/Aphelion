@@ -3,7 +3,7 @@ import Excercise from '../../components/workout/Excercise.vue';
 import ExcerciseSearch from './ExcerciseSearch.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { ReadFile, AppendFile } from '../../scripts/Filesystem';
+import { readFile, appendFile } from '../../scripts/filesystem';
 
 const props = defineProps({
     title: {type: String, default: 'New Workout'},
@@ -28,31 +28,33 @@ const timeString = computed(() => {
     return hours == 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 });
 
+const initWorkout = () => {
+    for (const item of props.data) {
+        let sets = []
+        for (let i = 0; i < item[1]; i++) {
+            sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false});
+        }
+        
+        if (allExcercises.value.has(item[0])) {
+            data.value.push({excName: allExcercises.value.get(item[0]).name, excID: item[0], excSets: sets})
+        } else {
+            console.error('Excercise not present', item[0]);
+        }
+    }
+
+    intervalId = setInterval(() => {
+        timerVal.value++;
+    }, 1000);
+};
+
 onMounted(() => {
-    ReadFile('excercises.txt').then((file) => {
+    readFile('excercises.txt').then((file) => {
         allExcercises.value = new Map(file);
 
         if (!editMode.value) {
-            for (const item of props.data) {
-                let sets = []
-                for (let i = 0; i < item[1]; i++) {
-                    sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false});
-                }
-                
-                if (allExcercises.value.has(item[0])) {
-                    data.value.push({excName: allExcercises.value.get(item[0]).name, excID: item[0], excSets: sets})
-                } else {
-                    console.error('Excercise not present', item[0]);
-                }
-            }
+            initWorkout();
         }
     });
-
-    if (!editMode.value) {
-        intervalId = setInterval(() => {
-            timerVal.value++;
-        }, 1000);
-    }
 });
 
 onUnmounted(() => {
@@ -75,7 +77,7 @@ const finishWorkout = () => {
             workoutTemplate.sets.push(data.value[i].excSets.length);
         }
 
-        AppendFile('workoutTemplates.txt', workoutTemplate);
+        appendFile('workoutTemplates.txt', workoutTemplate);
 
     } else {
         // store workout data
@@ -85,7 +87,7 @@ const finishWorkout = () => {
 }
 
 const addExcercise = (id) => {
-        ReadFile('excercises.txt').then((v) => {
+        readFile('excercises.txt').then((v) => {
         allExcercises.value = new Map(v);
         
         if (allExcercises.value.has(id)) {
@@ -134,7 +136,7 @@ const addSet = (item, warmUp) => {
     font-size: 40px;
     color: #eee;
     text-align: left;
-    margin: 0.5rem 0 0 1rem;
+    margin: 2rem 0 0 1rem;
 }
 
 .timer {
@@ -149,7 +151,7 @@ const addSet = (item, warmUp) => {
 }
 
 .exc-container {
-    margin: 1rem;
+    margin: 1rem 1rem 3rem 1rem;
 }
 
 .control-panel {

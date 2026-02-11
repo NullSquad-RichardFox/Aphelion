@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref, useTemplateRef } from 'vue'
 import { createGesture } from '@ionic/vue'
-import { ReadFile } from '../../scripts/Filesystem.js';
+import { readFile } from '../../scripts/filesystem.js';
 
 const emit = defineEmits(['openWorkout']);
 
@@ -13,7 +13,7 @@ const addGestureHandle = useTemplateRef('vec');
 const addAnimTranslate = ref(0);
 
 onMounted(() => {
-    ReadFile('workoutTemplates.txt').then((v) => {
+    readFile('workoutTemplates.txt').then((v) => {
         if (v != null ) {
             data.value = Array();
         }
@@ -101,7 +101,7 @@ const createWorkout = () => {
     font-size: 40px;
     color: #eee;
     text-align: left;
-    margin: 0.5rem 0 5rem 1rem;
+    margin: 2rem 0 5rem 1rem;
 }
 
 .section-title {
