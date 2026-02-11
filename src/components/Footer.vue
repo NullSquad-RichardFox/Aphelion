@@ -87,7 +87,7 @@ const dietClick = () => {
 }
 
 .footer-element img {
-    width: 50px;
+    width: 60px;
     aspect-ratio: 1;
     
 }

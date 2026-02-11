@@ -1,5 +1,6 @@
 <script setup>
 import CircularButton from '../../components/CircularButton.vue';
+import Settings from './Settings.vue'
 
 import {ref} from "vue"
 
@@ -7,13 +8,14 @@ const profileDataCategories = ref([
     {ref: "", icon: ""}, 
     {ref: "", icon: "gym_progress.png"}, 
     {ref: "", icon: "weight_progress.png"}, 
-    {ref: "", icon: "settings.png"}
-])
-const profileExpanded = ref(false)
+    {ref: () => { settingVisible.value = true }, icon: "settings.png"}
+]);
+const profileExpanded = ref(false);
+const settingVisible = ref(false);
 
 const profileClicked = () => {
-    profileExpanded.value = !profileExpanded.value
-}
+    profileExpanded.value = !profileExpanded.value;
+};
 
 </script>
 
@@ -24,6 +26,8 @@ const profileClicked = () => {
             <CircularButton :size="40" :icon="item.icon" @click="item.ref"/>
         </div>
     </div>
+
+    <Settings v-if="settingVisible" v-model="settingVisible"/>
 </template>
 
 <style scoped>
