@@ -31,7 +31,7 @@ const profileClicked = () => {
     width: 50px;
     justify-content: center;
     position: absolute;
-    top: 2rem;
+    top: 3.5rem;
     right: 20px;
 }
 

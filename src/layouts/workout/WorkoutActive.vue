@@ -136,7 +136,7 @@ const addSet = (item, warmUp) => {
     font-size: 40px;
     color: #eee;
     text-align: left;
-    margin: 2rem 0 0 1rem;
+    margin: 3.5rem 0 0 1rem;
 }
 
 .timer {

@@ -101,7 +101,7 @@ const createWorkout = () => {
     font-size: 40px;
     color: #eee;
     text-align: left;
-    margin: 2rem 0 5rem 1rem;
+    margin: 3.5rem 0 5rem 1rem;
 }
 
 .section-title {
