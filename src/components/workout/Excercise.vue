@@ -1,6 +1,7 @@
 <script setup>
-    import { onMounted } from 'vue'
-
+    import { onMounted, useTemplateRef, ref } from 'vue'
+    import { createGesture } from '@ionic/vue';
+    
     const props = defineProps({
         excerciseTitle: String,
         excerciseData: Array,
@@ -9,11 +10,35 @@
 
     const emit = defineEmits(['addSet']);
 
+    let lastHoldTrigger = 0;
+
+    const translateValX = ref(0);
+    const titleHandle = useTemplateRef('titleRef');
+
+    const horizontalSwipeMove = (e) => {
+        translateValX.value = e.deltaX;
+    }
+
+    const horizontalSwipeEnd = (e) => {
+        translateValX.value = 0;
+    }
+
     onMounted(() => {
+        const horizontalSwipe = createGesture({
+            el: titleHandle.value,
+            threshold: 0,
+            direction: 'x',
+            gestureName: 'horizontal-swipe',
+            onMove: (e) => horizontalSwipeMove(e),
+            onEnd: (e) => horizontalSwipeEnd(e)
+        })
+
+        horizontalSwipe.enable(true);
     });
 
     const itemClicked = (item) => {
         item.active = !item.active;
+        // pr stuff
     }
 
 </script>
@@ -21,7 +46,7 @@
 <template>
     <div class="frame">
         <div style="margin: 0.5rem;">
-            <p class="title">{{ props.excerciseTitle }}</p>
+            <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + translateValX + 'px)'}">{{ props.excerciseTitle }}</p>
         </div>
 
         <div class="header-decoration"></div>
@@ -52,7 +77,6 @@
     text-align: left;
     font-size: 25px;
     margin: 0;
-    color: #eeeeee;
 }
 
 .header-decoration {
@@ -74,7 +98,6 @@
 .item-text {
     margin: 0.2rem;
     font-size: 18px;
-    color: #eeeeee;
 }
 
 .warm-up-text {
