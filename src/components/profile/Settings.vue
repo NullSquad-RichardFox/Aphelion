@@ -1,22 +1,23 @@
 <script setup>
-import { ref } from 'vue'
-import { getAllFiles } from '../scripts/filesystem.js'
-import { file } from '@babel/types';
+import { ref, onMounted } from 'vue'
+import { getAllFiles, writeFile } from '../../scripts/filesystem.js'
 
 const model = defineModel();
 
 const rootDirFiles = ref([]);
 onMounted(() => {
-    for (file of getAllFiles()) {
+    /*for (file of getAllFiles()) {
         rootDirFiles.push({path: file, selected: false});
-    }
+    }*/
+
+    writeFile('workoutTemplates.txt', '');
 })
 </script>
 
 <template>
 
 <div class="container">
-    <div class="close-button" @click="model.value = false">x</div>
+    <div class="close-button" @click="model = false">x</div>
     <div class="list-files" v-for="file in rootDirFiles">
         <div class="file-list-item">
             <input type="checkbox" v-model="file.selected">

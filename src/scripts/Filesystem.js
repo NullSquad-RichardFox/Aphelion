@@ -55,21 +55,6 @@ function writeFile(file, val) {
     })
 }
 
-function appendFile(file, item) {
-    readFile().then((f) => {
-        if (f == null) {
-            writeFile(file, item);
-        } else {
-            try {
-                f.push(item);
-            } catch {
-                f += item;
-            }
-            writeFile(file, f);
-        }
-    });
-}
-
 function resetData() {
     Filesystem.readdir({
         path: '',
@@ -91,5 +76,5 @@ function getAllFiles() {
 }
 
 export {
-    readFile, writeFile, appendFile, resetData, getAllFiles
+    readFile, writeFile, resetData, getAllFiles
 }

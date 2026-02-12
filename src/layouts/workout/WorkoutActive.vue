@@ -3,7 +3,7 @@ import Excercise from '../../components/workout/Excercise.vue';
 import ExcerciseSearch from './ExcerciseSearch.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { readFile, appendFile } from '../../scripts/filesystem';
+import { readFile, writeFile } from '../../scripts/filesystem';
 
 const props = defineProps({
     title: {type: String, default: 'New Workout'},
@@ -20,6 +20,7 @@ const editMode = ref(props.data.size == 0);
 const showSearchMenu = ref(false);
 const timerVal = ref(0);
 let intervalId = null;
+
 
 const timeString = computed(() => {
     const hours = Math.floor(timerVal.value / 3600);
@@ -77,7 +78,15 @@ const finishWorkout = () => {
             workoutTemplate.sets.push(data.value[i].excSets.length);
         }
 
-        appendFile('workoutTemplates.txt', workoutTemplate);
+        readFile('workoutTemplates.txt').then((v) => {
+            if (v == null && v == '') {
+                writeFile('workoutTemplates.txt', Array(workoutTemplate));
+            } else {
+                const a = Array.from(v);
+                a.push(workoutTemplate);
+                writeFile('workoutTemplates.txt', JSON.stringify(a));
+            }
+        })
 
     } else {
         // store workout data
@@ -130,11 +139,11 @@ const addSet = (item, warmUp) => {
     top: 0;
     left:0;
     width: 100vw;
+    overflow: hidden;
 }
 
 .title {
     font-size: 40px;
-    color: #eee;
     text-align: left;
     margin: 3.5rem 0 0 1rem;
 }
