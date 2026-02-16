@@ -10,30 +10,49 @@
 
     const emit = defineEmits(['addSet']);
 
-    let lastHoldTrigger = 0;
-
-    const translateValX = ref(0);
+    const titleTranslate = ref(0);
+    const containerTranslate = ref(0);
     const titleHandle = useTemplateRef('titleRef');
-
-    const horizontalSwipeMove = (e) => {
-        translateValX.value = e.deltaX;
-    }
-
-    const horizontalSwipeEnd = (e) => {
-        translateValX.value = 0;
-    }
+    const containerHandle = useTemplateRef('setContainer');
 
     onMounted(() => {
-        const horizontalSwipe = createGesture({
+        const titleSwipeMove = (e) => {
+            titleTranslate.value = e.deltaX;
+        }
+
+        const titleSwipeEnd = (e) => {
+            titleTranslate.value = 0;
+        }
+
+        const titleSwipe = createGesture({
             el: titleHandle.value,
-            threshold: 0,
+            threshold: 10,
             direction: 'x',
             gestureName: 'horizontal-swipe',
-            onMove: (e) => horizontalSwipeMove(e),
-            onEnd: (e) => horizontalSwipeEnd(e)
+            onMove: (e) => titleSwipeMove(e),
+            onEnd: (e) => titleSwipeEnd(e)
         })
 
-        horizontalSwipe.enable(true);
+        titleSwipe.enable(true);
+
+        const containerSwipeMove = (e) => {
+            containerTranslate.value = e.deltaY;
+        };
+
+        const containerSwipeEnd = (e) => {
+            containerTranslate.value = 0;
+        };
+
+        const containerSwipe = createGesture({
+            el: containerHandle.value,
+            threshold: 10,
+            direction: 'y',
+            gestureName: 'container-swipe',
+            onMove: (e) => containerSwipeMove(e),
+            onEnd: (e) => containerSwipeEnd(e)
+        });
+
+        containerSwipe.enable(true);
     });
 
     const itemClicked = (item) => {
@@ -46,17 +65,17 @@
 <template>
     <div class="frame">
         <div style="margin: 0.5rem;">
-            <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + translateValX + 'px)'}">{{ props.excerciseTitle }}</p>
+            <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excerciseTitle }}</p>
         </div>
 
         <div class="header-decoration"></div>
 
-        <div class="container" v-for="(item, index) in props.excerciseData">
-            <div class="set" :class="[{'glass': item.active},{'glass-accent': item.isPr}]" @click="itemClicked(item)">
+        <div class="container" ref="setContainer">
+            <ListItem class="set" v-for="(item, index) in props.excerciseData" :class="[{'glass': item.active},{'glass-accent': item.isPr}]" :enable-gesture="true" :translation-y="containerTranslate" :max-displacement="40" @click="itemClicked(item)">
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ index + 1}}</p>
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ item.reps }} reps</p>
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-if="!editMode">{{item.weight}}kg</p>
-            </div>
+            </ListItem>
         </div>
 
         <div class="container" v-if="true">

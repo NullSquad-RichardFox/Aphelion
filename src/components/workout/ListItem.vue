@@ -10,7 +10,7 @@ const props = defineProps({
     icons: Array
 });
 
-const emit = defineEmits(['left', 'right']);
+const emit = defineEmits(['swipeLeft', 'swipeRight']);
 
 
 const swipeTranslate = ref(0);
@@ -22,6 +22,12 @@ onMounted(() => {
     };
 
     const horizontalSwipeEnd = (e) => {
+        if (swipeTranslate.value == props.maxDisplacement) {
+            emit('swipeRight');
+        } else if (swipeTranslate.value == -props.maxDisplacement) {
+            emit('swipeLeft');
+        }
+        
         swipeTranslate.value = 0;
     };
 
@@ -44,7 +50,7 @@ onMounted(() => {
 <div ref="container" :style="{'transform':'translate(' + swipeTranslate + 'px,' + props.tranlationY + 'px)'}"> 
     <slot />
         
-    <div class="icon" v-for="(icon, index) in props.icons" :style="[index % 2 ? 'left:0' : 'right:0']">
+    <div class="icon" v-for="(icon, index) in props.icons" :style="[index % 2 ? 'left:0' : 'right:0']" v-if="(index == 0 && swipeTranslate == props.maxDisplacement) || (index == 1 && swipeTranslate == -props.maxDisplacement)">
         <img :src="imageFromSrc(icon)" alt="">
     </div>
 </div>

@@ -2,8 +2,6 @@
 
 import { ref } from 'vue';
 
-const emit = defineEmits(['close', 'addExcercise']);
-
 const excName = ref('');
 const muscleParts = ref([
     {name: 'Biceps', active: false},
@@ -37,8 +35,8 @@ const createExcercise = () => {
         return;
     }
 
-    emit('addExcercise', excName.value, activeMuscles);
-    emit('close');
+    const router = useRouter();
+    router.push('/workout/search');
 };
 
 </script>
@@ -53,7 +51,7 @@ const createExcercise = () => {
         </div>
     </div>
     <div class="control-panel">
-        <div class="button-style active" @click="emit('close')">x</div>
+        <div class="button-style active" :to="/workout/search">x</div>
         <div class="button-style active" @click="createExcercise">o</div>
     </div>
 </div>

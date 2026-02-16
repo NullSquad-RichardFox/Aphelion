@@ -3,10 +3,6 @@ import {ref, onMounted, computed, onUnmounted} from 'vue'
 import { readFile, writeFile } from '../../scripts/filesystem';
 import { uuid } from '../../scripts/utilities';
 
-import ExcerciseCreator from './ExcerciseCreator.vue';
-
-const emit = defineEmits(['close', 'picked']);
-
 // get all excercises
 const allExcercises = ref(new Map());
 const searchBarText = ref('');
@@ -34,12 +30,10 @@ onMounted(() => {
             </div>
         </div>
         <div class="control-panel">
-            <div class="button-style" @click="emit('close')">x</div>
-            <div class="button-style" @click="showExcerciseCreator = true">+</div>
+            <div class="button-style" :to="/workout">x</div>
+            <div class="button-style" :to="/workout/creator">+</div>
         </div>
-    </div>
-    
-    <ExcerciseCreator v-if="showExcerciseCreator" @close="showExcerciseCreator = false" @add-excercise="excerciseCreated"/>
+    </div>    
 </template>
 
 <style scoped>

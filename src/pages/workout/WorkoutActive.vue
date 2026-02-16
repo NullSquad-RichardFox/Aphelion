@@ -1,6 +1,5 @@
 <script setup>
 import Excercise from '../../components/workout/Excercise.vue';
-import ExcerciseSearch from './ExcerciseSearch.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { readFile, writeFile } from '../../scripts/filesystem';
@@ -9,8 +8,6 @@ const props = defineProps({
     title: {type: String, default: 'New Workout'},
     data: Map
 });
-
-const emit = defineEmits(['close', 'finish']);
 
 // Defines
 const allExcercises = ref(new Map());
@@ -92,7 +89,8 @@ const finishWorkout = () => {
         // store workout data
     }
 
-    emit('close');
+    const router = useRouter();
+    router.push('/');
 }
 
 const addExcercise = (id) => {
@@ -121,14 +119,13 @@ const addSet = (item, warmUp) => {
         <div class="space"></div>
         <Excercise class="exc-container" v-for="item in data" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
         <div class="control-panel">
-            <div class="add-excercise button-style" @click="showSearchMenu = true">+</div>
+            <div class="add-excercise button-style" :to="/workout/search">+</div>
             <div class="workout-stop-panel">
                 <div class="button-style" @click="emit('close')">x</div>
                 <div class="button-style" @click="finishWorkout">o</div>
             </div>
         </div>
     </div>
-    <ExcerciseSearch v-if="showSearchMenu" @close="showSearchMenu = false" @picked="addExcercise"/>
 
 </template>
 

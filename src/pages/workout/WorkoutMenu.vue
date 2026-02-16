@@ -6,8 +6,6 @@ import { createGesture } from '@ionic/vue';
 import { readFile } from '../../scripts/filesystem.js';
 import { clamp } from '../../scripts/utilities.js'
 
-const emit = defineEmits(['openWorkout']);
-
 const data = ref([]);
 const openNewWorkout = ref(false);
 const showAddWorkout = ref(false);
@@ -59,6 +57,9 @@ onMounted(() => {
 
 const workoutPicked = (id) => {
     emit('openWorkout', data.value[id].name, data.value[id].excercises, data.value[id].sets);
+    
+    const router = useRouter();
+    router.push('/workout'); // idk how to pass the params
 };
 
 const createWorkout = () => {
