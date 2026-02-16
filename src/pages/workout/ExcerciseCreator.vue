@@ -51,7 +51,7 @@ const createExcercise = () => {
         </div>
     </div>
     <div class="control-panel">
-        <div class="button-style active" :to="/workout/search">x</div>
+        <RouterLink class="button-style active" to="/workout/search">x</RouterLink>
         <div class="button-style active" @click="createExcercise">o</div>
     </div>
 </div>

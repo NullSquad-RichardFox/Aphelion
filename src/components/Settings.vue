@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getAllFiles, writeFile } from '../../scripts/filesystem.js'
+import { getAllFiles, writeFile } from '../utils/filesystem'
 
 const model = defineModel();
 

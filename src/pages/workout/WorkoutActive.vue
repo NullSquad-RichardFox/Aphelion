@@ -1,19 +1,19 @@
 <script setup>
-import Excercise from '../../components/workout/Excercise.vue';
+import Excercise from '../../components/Excercise.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { readFile, writeFile } from '../../scripts/filesystem';
+import { readFile, writeFile } from '../../utils/filesystem';
+import { useRoute } from 'vue-router';
 
-const props = defineProps({
-    title: {type: String, default: 'New Workout'},
-    data: Map
-});
+const route = useRoute();
 
 // Defines
 const allExcercises = ref(new Map());
 const data = ref([]);
 
-const editMode = ref(props.data.size == 0);
+console.log(route.params.name)
+
+const editMode = ref(true);
 const showSearchMenu = ref(false);
 const timerVal = ref(0);
 let intervalId = null;
@@ -27,7 +27,7 @@ const timeString = computed(() => {
 });
 
 const initWorkout = () => {
-    for (const item of props.data) {
+    for (const item of []) {
         let sets = []
         for (let i = 0; i < item[1]; i++) {
             sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false});
@@ -114,14 +114,14 @@ const addSet = (item, warmUp) => {
 <template>
     
     <div class="container">
-        <p class="title">{{ props.title }}</p>
+        <p class="title">{{ route.params.name }}</p>
         <p class="timer" v-if="!editMode">{{ timeString }}</p>
         <div class="space"></div>
         <Excercise class="exc-container" v-for="item in data" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
         <div class="control-panel">
-            <div class="add-excercise button-style" :to="/workout/search">+</div>
+            <RouterLink class="add-excercise button-style" to="/workout/search">+</RouterLink>
             <div class="workout-stop-panel">
-                <div class="button-style" @click="emit('close')">x</div>
+                <RouterLink class="button-style" to="/">x</RouterLink>
                 <div class="button-style" @click="finishWorkout">o</div>
             </div>
         </div>

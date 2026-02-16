@@ -1,6 +1,6 @@
 <script setup>
     import {computed, onMounted} from 'vue'
-    import { imageFromSrc } from '../scripts/utilities';
+    import { imageFromSrc } from '../utils/conversion';
 
     const props = defineProps({
         icon: String,

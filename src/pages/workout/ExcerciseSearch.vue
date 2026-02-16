@@ -1,7 +1,7 @@
 <script setup>
 import {ref, onMounted, computed, onUnmounted} from 'vue'
-import { readFile, writeFile } from '../../scripts/filesystem';
-import { uuid } from '../../scripts/utilities';
+import { readFile, writeFile } from '../../utils/filesystem';
+import { uuid } from '../../utils/math';
 
 // get all excercises
 const allExcercises = ref(new Map());
@@ -30,8 +30,8 @@ onMounted(() => {
             </div>
         </div>
         <div class="control-panel">
-            <div class="button-style" :to="/workout">x</div>
-            <div class="button-style" :to="/workout/creator">+</div>
+            <RouterLink class="button-style" to="/workout">x</RouterLink>
+            <RouterLink class="button-style" to="/workout/creator">+</RouterLink>
         </div>
     </div>    
 </template>

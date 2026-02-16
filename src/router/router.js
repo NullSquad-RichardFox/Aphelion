@@ -12,7 +12,9 @@ const routes = [
     { path: '/workout/creator', component: ExerciseCreator },
 ]
 
-export const router = createRouter({
-    history: createWebHistory(process.env.BASE_URL),
+const router = createRouter({
+    history: createWebHistory(),
     routes,
 });
+
+export default router;

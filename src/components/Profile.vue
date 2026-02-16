@@ -1,5 +1,5 @@
 <script setup>
-import CircularButton from '../../components/CircularButton.vue';
+import CircularButton from './CircularButton.vue';
 import Settings from './Settings.vue'
 
 import {ref} from "vue"

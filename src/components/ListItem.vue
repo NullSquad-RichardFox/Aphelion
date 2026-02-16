@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, useTemplateRef } from 'vue'
 import { createGesture } from '@ionic/vue'
-import { clamp, imageFromSrc } from '../../scripts/utilities.js'
+import { clamp } from '../utils/math'
+import { imageFromSrc } from '../utils/conversion';
 
 const props = defineProps({
     enableGesture: Boolean,

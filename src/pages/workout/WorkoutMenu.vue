@@ -1,10 +1,11 @@
 <script setup>
-import ListItem from '../../components/workout/ListItem.vue';
+import ListItem from '../../components/ListItem.vue';
 
+import { useRouter } from 'vue-router';
 import { onMounted, ref, useTemplateRef } from 'vue'
 import { createGesture } from '@ionic/vue';
-import { readFile } from '../../scripts/filesystem.js';
-import { clamp } from '../../scripts/utilities.js'
+import { readFile } from '../../utils/filesystem';
+import { clamp } from '../../utils/math'
 
 const data = ref([]);
 const openNewWorkout = ref(false);
@@ -12,6 +13,8 @@ const showAddWorkout = ref(false);
 const workoutName = ref('');
 const allWorkoutsTranslation = ref(0);
 const allWorkoutsHandle = useTemplateRef('allWorkoutsRef');
+
+const router = useRouter();
 
 onMounted(() => {
     readFile('workoutTemplates.txt').then((v) => {
@@ -56,9 +59,8 @@ onMounted(() => {
 });
 
 const workoutPicked = (id) => {
-    emit('openWorkout', data.value[id].name, data.value[id].excercises, data.value[id].sets);
+    //emit('openWorkout', data.value[id].name, data.value[id].excercises, data.value[id].sets);
     
-    const router = useRouter();
     router.push('/workout'); // idk how to pass the params
 };
 
@@ -69,7 +71,7 @@ const createWorkout = () => {
     }
 
     openNewWorkout.value = false;
-    emit('openWorkout', workoutName.value, [], []);
+    router.push('/workout/');
 };
 
 </script>
