@@ -1,5 +1,6 @@
 <script setup>
     import {computed, onMounted} from 'vue'
+    import { imageFromSrc } from '../scripts/utilities';
 
     const props = defineProps({
         icon: String,
@@ -9,15 +10,11 @@
     const clickFn = () => {
         console.log(props.icon);
     }
-
-    const imgSrc = computed(() => {
-        return new URL(`../assets/${props.icon}`, import.meta.url).href
-    })
 </script>
 
 <template>
     <div class="circle" @click="clickFn">
-        <img :src='imgSrc' alt="">
+        <img :src='imageFromSrc(props.icon)' alt="">
     </div>
 </template>
 

@@ -1,6 +1,10 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import ListItem from '../../components/workout/ListItem.vue';
+
+import { onMounted, ref, useTemplateRef } from 'vue'
+import { createGesture } from '@ionic/vue';
 import { readFile } from '../../scripts/filesystem.js';
+import { clamp } from '../../scripts/utilities.js'
 
 const emit = defineEmits(['openWorkout']);
 
@@ -8,6 +12,8 @@ const data = ref([]);
 const openNewWorkout = ref(false);
 const showAddWorkout = ref(false);
 const workoutName = ref('');
+const allWorkoutsTranslation = ref(0);
+const allWorkoutsHandle = useTemplateRef('allWorkoutsRef');
 
 onMounted(() => {
     readFile('workoutTemplates.txt').then((v) => {
@@ -21,6 +27,34 @@ onMounted(() => {
 
         showAddWorkout.value = data.value.length == 0;
     });
+
+    const verticalSwipeStart = (e) => {
+
+    };
+
+    const verticalSwipeMove = (e) => {
+        allWorkoutsTranslation.value = clamp(e.deltaY, -50, 0);
+    };
+
+    const verticalSwipeEnd = (e) => {
+        if (allWorkoutsTranslation.value <= -50) {
+            openNewWorkout.value = true;
+        }
+
+        allWorkoutsTranslation.value = 0;
+    };
+
+    const gesture = createGesture({
+        el: allWorkoutsHandle.value,
+        threshold: 10,
+        direction: 'y',
+        gestureName: 'vertical-swipe',
+        onStart: (e) => verticalSwipeStart(e),
+        onMove: (e) => verticalSwipeMove(e),
+        onEnd: (e) => verticalSwipeEnd(e)
+    });
+
+    gesture.enable(true);
 });
 
 const workoutPicked = (id) => {
@@ -52,12 +86,15 @@ const createWorkout = () => {
 
     <div>
         <p class="section-title">My Workouts</p>
-        <div class="all-workouts" ref="vec">
-            <div class="workout-item" v-for="(item, index) in data" @click="workoutPicked(index)">
+        <div class="all-workouts" ref="allWorkoutsRef">
+            <ListItem class="workout-item" v-for="(item, index) in data" @click="workoutPicked(index)" :tranlation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="50" :icons="['diet.png', 'gym.png']">
                 <p>{{ item.name }}</p>
                 <img src="../../assets/editIcon.png" alt="" class="workout-edit">
-            </div>
+            </ListItem>
             <div v-if="showAddWorkout" class="workout-item centered" @click="openNewWorkout = true">
+                <p>+</p>
+            </div>
+            <div v-if="allWorkoutsTranslation <= -42" class="workout-item phantom centered" :style="{'transform':'translateY(' + allWorkoutsTranslation + 'px)'}">
                 <p>+</p>
             </div>
         </div>
@@ -97,6 +134,7 @@ const createWorkout = () => {
 .quick-access-workout {
     display: grid;
     align-items: center;
+    text-align: center;
     margin: 0 1rem;
     background-color: #8e8e8e11;
     height: 80px;
@@ -110,6 +148,7 @@ const createWorkout = () => {
 }
 
 .all-workouts {
+    position: relative;
     margin: 0 1rem;
     background-color: #8e8e8e11;
     border-radius: 2px;
@@ -123,6 +162,7 @@ const createWorkout = () => {
     background-color: #80808029;
     border-radius: 4px;
     margin: 0.8rem 0.5rem;
+    height: 3rem;
 }
 
 .workout-item p {
@@ -130,10 +170,15 @@ const createWorkout = () => {
     font-size: 24px;
 }
 
+.phantom {
+    position: absolute;
+    width: calc(100% - 1.4rem);
+    margin-top: 0;
+}
+
 .workout-edit {
     margin: 0.2rem;
-    width: 36px;
-    height: 36px;
+    height: calc(100% - 0.4rem);
     filter: invert(99%) sepia(6%) saturate(25%) hue-rotate(239deg) brightness(109%) contrast(87%);
 }
 
