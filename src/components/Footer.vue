@@ -1,23 +1,23 @@
 <script setup>
 import { ref } from "vue"
+import { useRouter } from "vue-router";
 
-const emit = defineEmits(['cardio', 'gym', 'diet']);
-
+const router = useRouter();
 const activeId = ref(1)
 
-const cardioClick = () => {
+const workoutClick = () => {
     activeId.value = 0;
-    emit('cardio');
+    router.push('/workout');
 };
 
-const gymClick = () => {
+const homeClick = () => {
     activeId.value = 1;
-    emit('gym');
+    router.push('/');
 };
 
 const dietClick = () => {
     activeId.value = 2;
-    emit('diet');
+    //router.push('/diet');
 };
 
 </script>
@@ -25,10 +25,10 @@ const dietClick = () => {
 <template>
     <div class="footer">
         <div class="holder">
-            <div class="footer-element" :class="[activeId == 0 ? 'active' : 'in-active']" @click="cardioClick">
-                <img src="../assets/cardio.png" alt="">
+            <div class="footer-element" :class="[activeId == 0 ? 'active' : 'in-active']" @click="workoutClick">
+                <img src="../assets/gym.png" alt="">
             </div>
-            <div class="footer-element" :class="[activeId == 1 ? 'active' : 'in-active']" @click="gymClick">
+            <div class="footer-element" :class="[activeId == 1 ? 'active' : 'in-active']" @click="homeClick">
                 <img src="../assets/gym.png" alt="">
             </div>
             <div class="footer-element" :class="[activeId == 2 ? 'active' : 'in-active']" @click="dietClick">

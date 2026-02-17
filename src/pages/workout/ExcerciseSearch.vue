@@ -1,17 +1,24 @@
 <script setup>
-import {ref, onMounted, computed, onUnmounted} from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router';
 import { readFile, writeFile } from '../../utils/filesystem';
 import { uuid } from '../../utils/math';
+
+const router = useRouter();
 
 // get all excercises
 const allExcercises = ref(new Map());
 const searchBarText = ref('');
-const showExcerciseCreator = ref(false);
 
-const excerciseCreated = (title, muscles) => {
-    allExcercises.value.set(uuid(), {name: title, musclesUsed: muscles, data: []});
-    writeFile('excercises.txt', JSON.stringify(Array.from(allExcercises.value.entries())));
-};
+const goBack = () => {
+    router.go(-1);
+}
+
+const exercisePicked = () => {  
+    // pick?
+
+    router.go(-1);
+}
 
 onMounted(() => {
     readFile('excercises.txt').then((file) => {
@@ -25,12 +32,12 @@ onMounted(() => {
     <div class="container">
         <input class="search-bar" type="text" placeholder="Excercise Name" v-model="searchBarText">
         <div class="results">
-            <div class="excercise" v-for="item in allExcercises" @click="emit('picked', item[0]), emit('close')">
+            <div class="excercise" v-for="item in allExcercises" @click="exercisePicked">
                 <p>{{ item[1].name }}</p>
             </div>
         </div>
         <div class="control-panel">
-            <RouterLink class="button-style" to="/workout">x</RouterLink>
+            <div class="button-style" @click="goBack">x</div>
             <RouterLink class="button-style" to="/workout/creator">+</RouterLink>
         </div>
     </div>    

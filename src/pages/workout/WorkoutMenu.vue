@@ -61,7 +61,7 @@ onMounted(() => {
 const workoutPicked = (id) => {
     //emit('openWorkout', data.value[id].name, data.value[id].excercises, data.value[id].sets);
     
-    router.push('/workout'); // idk how to pass the params
+    router.push(`/workout/${id}`); // idk how to pass the params
 };
 
 const createWorkout = () => {
@@ -71,7 +71,7 @@ const createWorkout = () => {
     }
 
     openNewWorkout.value = false;
-    router.push('/workout/');
+    router.push('/workout/0');
 };
 
 </script>

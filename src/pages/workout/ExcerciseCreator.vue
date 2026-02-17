@@ -1,7 +1,10 @@
 <script setup>
 
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { readFile, writeFile } from '../../utils/filesystem';
 
+const router = useRouter();
 const excName = ref('');
 const muscleParts = ref([
     {name: 'Biceps', active: false},
@@ -35,10 +38,15 @@ const createExcercise = () => {
         return;
     }
 
-    const router = useRouter();
-    router.push('/workout/search');
+    readFile('excercises.txt').then((f) => {
+        const exercises = new Map(f);
+        router.push('/workout/search');
+    });
 };
 
+const goBack = () => {
+    router.go(-1);
+}
 </script>
 
 <template>
@@ -51,7 +59,7 @@ const createExcercise = () => {
         </div>
     </div>
     <div class="control-panel">
-        <RouterLink class="button-style active" to="/workout/search">x</RouterLink>
+        <div class="button-style active" @click="goBack">x</div>
         <div class="button-style active" @click="createExcercise">o</div>
     </div>
 </div>

@@ -11,7 +11,7 @@ const route = useRoute();
 const allExcercises = ref(new Map());
 const data = ref([]);
 
-console.log(route.params.name)
+console.log(route.params.id)
 
 const editMode = ref(true);
 const showSearchMenu = ref(false);
@@ -121,7 +121,7 @@ const addSet = (item, warmUp) => {
         <div class="control-panel">
             <RouterLink class="add-excercise button-style" to="/workout/search">+</RouterLink>
             <div class="workout-stop-panel">
-                <RouterLink class="button-style" to="/">x</RouterLink>
+                <RouterLink class="button-style" to="/workout">x</RouterLink>
                 <div class="button-style" @click="finishWorkout">o</div>
             </div>
         </div>
