@@ -2,48 +2,49 @@
 import ListItem from '../../components/ListItem.vue';
 
 import { useRouter } from 'vue-router';
-import { onMounted, ref, useTemplateRef } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue';
 import { createGesture } from '@ionic/vue';
-import { readFile } from '../../utils/filesystem';
-import { clamp } from '../../utils/math'
+import { clamp } from '../../utils/math';
+import { loadDatabase, closeDatabase, querryDatabase } from '../../utils/database';
 
-const data = ref([]);
+const userWorkouts = ref([]);
 const openNewWorkout = ref(false);
-const showAddWorkout = ref(false);
+const isWorkoutListEmpty = ref(true);
 const workoutName = ref('');
+
+// Gestures
 const allWorkoutsTranslation = ref(0);
 const allWorkoutsHandle = useTemplateRef('allWorkoutsRef');
 
 const router = useRouter();
 
+const verticalSwipeStart = (e) => {
+
+};
+
+const verticalSwipeMove = (e) => {
+    allWorkoutsTranslation.value = clamp(e.deltaY, -50, 0);
+};
+
+const verticalSwipeEnd = (e) => {
+    if (allWorkoutsTranslation.value <= -50) {
+        openNewWorkout.value = true;
+    }
+
+    allWorkoutsTranslation.value = 0;
+};
+
 onMounted(() => {
-    readFile('workoutTemplates.txt').then((v) => {
-        if (v == null || v == '') {
-            data.value = [];
-        } else if (Array.isArray(v)) {
-            data.value = v;
-        } else {
-            data.value = Array(v);
-        }
+    loadDatabase().then(() => {
+        querryDatabase('SELECT * FROM workoutTemplates').then((res) => {
+            userWorkouts.value = res.values;
 
-        showAddWorkout.value = data.value.length == 0;
+            if (userWorkouts.value != null) {
+                isWorkoutListEmpty.value = false;
+            }
+        });
+
     });
-
-    const verticalSwipeStart = (e) => {
-
-    };
-
-    const verticalSwipeMove = (e) => {
-        allWorkoutsTranslation.value = clamp(e.deltaY, -50, 0);
-    };
-
-    const verticalSwipeEnd = (e) => {
-        if (allWorkoutsTranslation.value <= -50) {
-            openNewWorkout.value = true;
-        }
-
-        allWorkoutsTranslation.value = 0;
-    };
 
     const gesture = createGesture({
         el: allWorkoutsHandle.value,
@@ -58,21 +59,16 @@ onMounted(() => {
     gesture.enable(true);
 });
 
-const workoutPicked = (id) => {
-    //emit('openWorkout', data.value[id].name, data.value[id].excercises, data.value[id].sets);
-    
-    router.push(`/workout/${id}`); // idk how to pass the params
-};
-
 const createWorkout = () => {
-    if (workoutName.value == '')
-    {
-        return;
-    }
+    if (workoutName.value == '') return;
 
     openNewWorkout.value = false;
     router.push(`/workout/${workoutName.value}`);
 };
+
+const workoutPicked = (id) => {
+    router.push(`/workout/${id}`);
+}
 
 </script>
 
@@ -80,23 +76,25 @@ const createWorkout = () => {
 <div class="container">
     <p class="title">Workouts</p>
     
-    <div v-if="data.length != 0">
+    <div v-if="!isWorkoutListEmpty">
         <p class="section-title">Next Workout</p>
-        <div class="quick-access-workout" @click="workoutPicked(0)">
-            <p>{{ data[0].name }}</p>
+        <div class="quick-access-workout" @click="workoutPicked(userWorkouts[0].id)">
+            <p>{{ userWorkouts[0].name }}</p>
         </div>
     </div>
 
     <div>
         <p class="section-title">My Workouts</p>
         <div class="all-workouts" ref="allWorkoutsRef">
-            <ListItem class="workout-item" v-for="(item, index) in data" @click="workoutPicked(index)" :tranlation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="50" :icons="['diet.png', 'gym.png']">
+            <ListItem class="workout-item" v-for="item in userWorkouts" @click="workoutPicked(item.id)" :tranlation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="50" :icons="['diet.png', 'gym.png']">
                 <p>{{ item.name }}</p>
                 <img src="../../assets/editIcon.png" alt="" class="workout-edit">
             </ListItem>
-            <div v-if="showAddWorkout" class="workout-item centered" @click="openNewWorkout = true">
+
+            <div v-if="isWorkoutListEmpty" class="workout-item centered" @click="openNewWorkout = true">
                 <p>+</p>
             </div>
+
             <div v-if="allWorkoutsTranslation <= -42" class="workout-item phantom centered" :style="{'transform':'translateY(' + allWorkoutsTranslation + 'px)'}">
                 <p>+</p>
             </div>

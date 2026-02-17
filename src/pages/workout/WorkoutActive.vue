@@ -3,20 +3,24 @@ import Excercise from '../../components/Excercise.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
-import { readFile, writeFile } from '../../utils/filesystem';
+import { loadDatabase, closeDatabase, querryDatabase } from '../../utils/database';
 import { isNumeric } from '../../utils/conversion';
+import { uuid } from '../../utils/math';
 
 const route = useRoute();
 const router = useRouter();
 
 // Defines
-const allExcercises = ref(new Map());
 
 const editMode = ref(!isNumeric(route.params.id));
+
 const workoutName = ref('');
-const workoutExercises = ref([]);
+const workoutExerciseId = ref([]);
+const workoutExerciseNames = ref([]);
 const workoutSets = ref([]);
 const workoutWeights = ref([]);
+
+const workoutExercises = ref();
 
 const timerVal = ref(0);
 let intervalId = null;
@@ -36,20 +40,15 @@ onMounted(() => {
         }, 1000);
 
         // Load workout data
-        readFile('workoutTemplates.txt').then((file) => {
-            const item = file[route.params.id];
-            workoutName.value = item.name;
-            
-            readFile('excercises.txt').then((ex) => {
-                for (const e of item.excercises) {
-                    workoutExercises.push({name: ex[e].excName, id: e});
-
-                    for (const set of item.sets) {
-                        workoutSets.push({total: set, completed: 0});
-                        workoutWeights.push(10);
-                    }
-                }
+        loadDatabase().then(() => {
+            querryDatabase(`SELECT * FROM workoutTemplates WHERE id=${route.params.id}`).then((res) => {
+                const workout = res.values[0];
+                workoutName.value = workout.name;
+                querryDatabase(`SELECT * FROM exercises`).then((exercises) => {
+                    console.log(exercises.values);
+                });
             });
+
         });
     } else {
         workoutName.value = route.params.id;
@@ -64,33 +63,20 @@ onUnmounted(() => {
 
 const finishWorkout = () => {
     if (editMode.value) {
-        // stores workout template
-        const workoutTemplate = {
-            name: props.title,
-            excercises: [],
-            sets: []
-        }
-
-        for (let i = 0; i < data.value.length; i++) {
-            workoutTemplate.excercises.push(data.value[i].excID);
-            workoutTemplate.sets.push(data.value[i].excSets.length);
-        }
-
-        readFile('workoutTemplates.txt').then((v) => {
-            if (v == null && v == '') {
-                writeFile('workoutTemplates.txt', Array(workoutTemplate));
-            } else {
-                const a = Array.from(v);
-                a.push(workoutTemplate);
-                writeFile('workoutTemplates.txt', JSON.stringify(a));
-            }
+        loadDatabase().then(() => {
+            console.log(workoutName.value);
+            querryDatabase(`
+                INSERT INTO workoutTemplates (id, name, exercises, sets) 
+                VALUES (?,?,?,?);`, [uuid(), workoutName.value, JSON.stringify(workoutExercises.value), JSON.stringify(workoutSets.value)]
+            ).then((v) => {
+                console.log(v);
+                router.push('/workout');
+            })
         })
 
     } else {
         // store workout data
     }
-
-    router.push('/workout');
 }
 
 const addExcercise = (id) => {
@@ -118,7 +104,7 @@ const addSet = (item, warmUp) => {
 
         <div class="space"></div>
 
-        <Excercise class="exc-container" v-for="item in []" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
+        <Excercise class="exc-container" v-for="item in workoutExercises" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
         
         <div class="control-panel">
             <RouterLink class="add-excercise button-style" to="/workout/search">+</RouterLink>
