@@ -1,9 +1,10 @@
 <script setup>
-import { ref } from "vue"
-import { useRouter } from "vue-router";
+import { ref, onMounted } from "vue"
+import { useRouter, useRoute } from "vue-router";
 
 const router = useRouter();
-const activeId = ref(1)
+const route = useRoute();
+const activeId = ref();
 
 const workoutClick = () => {
     activeId.value = 0;
@@ -19,6 +20,16 @@ const dietClick = () => {
     activeId.value = 2;
     //router.push('/diet');
 };
+
+onMounted(() => {
+    if (route.path == '/workout') {
+        activeId.value = 0;
+    } else if (route.path == '/') {
+        activeId.value = 1;
+    } else if (route.path == '/diet') {
+        activeId.value = 2;
+    }
+});
 
 </script>
 

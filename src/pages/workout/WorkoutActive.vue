@@ -2,22 +2,24 @@
 import Excercise from '../../components/Excercise.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router';
 import { readFile, writeFile } from '../../utils/filesystem';
-import { useRoute } from 'vue-router';
+import { isNumeric } from '../../utils/conversion';
 
 const route = useRoute();
+const router = useRouter();
 
 // Defines
 const allExcercises = ref(new Map());
-const data = ref([]);
 
-console.log(route.params.id)
+const editMode = ref(!isNumeric(route.params.id));
+const workoutName = ref('');
+const workoutExercises = ref([]);
+const workoutSets = ref([]);
+const workoutWeights = ref([]);
 
-const editMode = ref(true);
-const showSearchMenu = ref(false);
 const timerVal = ref(0);
 let intervalId = null;
-
 
 const timeString = computed(() => {
     const hours = Math.floor(timerVal.value / 3600);
@@ -26,33 +28,32 @@ const timeString = computed(() => {
     return hours == 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 });
 
-const initWorkout = () => {
-    for (const item of []) {
-        let sets = []
-        for (let i = 0; i < item[1]; i++) {
-            sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false});
-        }
-        
-        if (allExcercises.value.has(item[0])) {
-            data.value.push({excName: allExcercises.value.get(item[0]).name, excID: item[0], excSets: sets})
-        } else {
-            console.error('Excercise not present', item[0]);
-        }
-    }
-
-    intervalId = setInterval(() => {
-        timerVal.value++;
-    }, 1000);
-};
-
 onMounted(() => {
-    readFile('excercises.txt').then((file) => {
-        allExcercises.value = new Map(file);
+    if (!editMode.value) {
+        // Set up timer
+        intervalId = setInterval(() => {
+            timerVal.value++;
+        }, 1000);
 
-        if (!editMode.value) {
-            initWorkout();
-        }
-    });
+        // Load workout data
+        readFile('workoutTemplates.txt').then((file) => {
+            const item = file[route.params.id];
+            workoutName.value = item.name;
+            
+            readFile('excercises.txt').then((ex) => {
+                for (const e of item.excercises) {
+                    workoutExercises.push({name: ex[e].excName, id: e});
+
+                    for (const set of item.sets) {
+                        workoutSets.push({total: set, completed: 0});
+                        workoutWeights.push(10);
+                    }
+                }
+            });
+        });
+    } else {
+        workoutName.value = route.params.id;
+    }
 });
 
 onUnmounted(() => {
@@ -89,8 +90,7 @@ const finishWorkout = () => {
         // store workout data
     }
 
-    const router = useRouter();
-    router.push('/');
+    router.push('/workout');
 }
 
 const addExcercise = (id) => {
@@ -112,12 +112,14 @@ const addSet = (item, warmUp) => {
 </script>
 
 <template>
-    
     <div class="container">
-        <p class="title">{{ route.params.name }}</p>
+        <p class="title">{{ workoutName }}</p>
         <p class="timer" v-if="!editMode">{{ timeString }}</p>
+
         <div class="space"></div>
-        <Excercise class="exc-container" v-for="item in data" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
+
+        <Excercise class="exc-container" v-for="item in []" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
+        
         <div class="control-panel">
             <RouterLink class="add-excercise button-style" to="/workout/search">+</RouterLink>
             <div class="workout-stop-panel">
@@ -126,7 +128,6 @@ const addSet = (item, warmUp) => {
             </div>
         </div>
     </div>
-
 </template>
 
 <style scoped>

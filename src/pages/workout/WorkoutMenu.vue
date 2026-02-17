@@ -71,7 +71,7 @@ const createWorkout = () => {
     }
 
     openNewWorkout.value = false;
-    router.push('/workout/0');
+    router.push(`/workout/${workoutName.value}`);
 };
 
 </script>
