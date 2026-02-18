@@ -3,6 +3,53 @@ import { SQLiteConnection, CapacitorSQLite } from "@capacitor-community/sqlite";
 const sqlite = new SQLiteConnection(CapacitorSQLite);
 let db = null;  
 
+const myTables = [
+    {name: 'workoutTemplates', execute: `
+        id INTEGER AUTO_INCREMENT NOT NULL,
+        name TEXT NOT NULL,
+        exercises TEXT,
+        sets TEXT,
+        PRIMARY KEY (id)
+        `}, 
+    {name: 'exercises', execute: `
+        id INTEGER AUTO_INCREMENT NOT NULL,
+        name TEXT,
+        musclesWorked TEXT,
+        data TEXT,
+        PRIMARY KEY (id)
+        `}, 
+    {name: 'currentWorkout', execute: `
+        id INTEGER PRIMARY KEY NOT NULL,
+        name TEXT,
+        timer INTEGER,
+        editMode BOOLEAN,
+        exercises TEXT,
+        setsTotal TEXT,
+        setsWorked TEXT,
+        weights TEXT
+        `}]; // data = [{ workout, date, weights, sets }]
+
+async function dropTable(table) {
+    for (item of myTables) {
+        if (item.name === table) {
+            await db.open();
+            await db.execute(`DROP TABLE ${table}`);
+            await db.close();
+            return;
+        }
+    }
+}
+
+async function createTable(table) {
+    for (item of myTables) {
+        if (item.name === table) {
+            await db.open();
+            await db.execute(`CREATE TABLE IF NOT EXISTS ${item.name} (${item.execute});`);
+            await db.close();
+        }
+    }
+}
+
 async function loadDatabase() {
     const ret = await sqlite.checkConnectionsConsistency();
     const isConn = (await sqlite.isConnection('db_aphelion', false)).result;
@@ -15,36 +62,13 @@ async function loadDatabase() {
 
     await db.open();
 
-    await db.execute('DROP TABLE workoutTemplates');
-    await db.execute('DROP TABLE exercises');
-    await db.execute('DROP TABLE currentWorkout');
+    await dropTable('workoutTemplates');
+    await dropTable('exercises');
+    await dropTable('currentWorkout');
 
-    await db.execute(`CREATE TABLE IF NOT EXISTS workoutTemplates (
-        id INTEGER AUTO_INCREMENT NOT NULL,
-        name TEXT NOT NULL,
-        exercises TEXT,
-        sets TEXT,
-        PRIMARY KEY (id)
-    );`);
-
-    await db.execute(`CREATE TABLE IF NOT EXISTS exercises (
-        id INTEGER AUTO_INCREMENT NOT NULL,
-        name TEXT,
-        musclesWorked TEXT,
-        data TEXT,
-        PRIMARY KEY (id)
-    );`) // data = [ { workoutId, date, sets, weights } ]
-
-    await db.execute(`CREATE TABLE IF NOT EXISTS currentWorkout (
-        id INTEGER PRIMARY KEY NOT NULL,
-        name TEXT,
-        timer INTEGER,
-        exerciseIds TEXT,
-        exerciseNames TEXT,
-        setsTotal TEXT,
-        setsWorked TEXT,
-        weights TEXT
-    );`)
+    await createTable('workoutTemplates');
+    await createTable('exercises');
+    await createTable('currentWorkout');
 
     await db.close();
 }
@@ -67,5 +91,5 @@ async function queryDatabase(querry, data) {
 }
 
 export {
-    loadDatabase, closeDatabase, queryDatabase
+    loadDatabase, closeDatabase, queryDatabase, dropTable, createTable
 }

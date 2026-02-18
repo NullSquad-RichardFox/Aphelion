@@ -14,6 +14,10 @@ const goBack = () => {
     router.push(`/workout/${route.params.id}`);
 }
 
+const fulfillSearch = (name) => {
+    name.startsWith(searchBarText.value);
+}
+
 const exercisePicked = (id) => {  
     console.log(id)
     router.push({ path: `/workout/${route.params.id}`, state: { exercise: id }});
@@ -31,8 +35,8 @@ onMounted(() => {
     <div class="container">
         <input class="search-bar" type="text" placeholder="Excercise Name" v-model="searchBarText">
         <div class="results">
-            <div class="excercise" v-for="item in allExcercises" @click="exercisePicked(item.id)">
-                <p>{{ item.name + ' ' + item.id }}</p>
+            <div class="excercise" v-for="item in allExcercises" v-if="fulfillsSearch(item.name)" @click="exercisePicked(item.id)">
+                <p>{{ item.name }}</p>
             </div>
         </div>
         <div class="control-panel">
