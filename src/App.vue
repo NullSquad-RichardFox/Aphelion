@@ -9,11 +9,11 @@ import { closeDatabase } from './utils/database';
 const router = useRouter();
 const showControlUI = ref(true);
 
-router.beforeEach((from, to) => {
+router.beforeEach((to, from) => {
     if ((to.path.endsWith('/search') || to.path.endsWith('/creator')) && to.path.startsWith('/workout')) {
-      showControlUI.value = false;
+        showControlUI.value = false;
     } else {
-      showControlUI.value = true;
+        showControlUI.value = true;
     }
 })
 
@@ -109,7 +109,7 @@ body {
     48vw 9vh 1px 1px #fff, -43vw 30vh 1px 1px #fff, 29vw -12vh 1px 1px #fff,
     -48vw 13vh 1px 0px #fff, -42vw 32vh 1px 1px #fff, 34vw 15vh 1px 1px #fff,
     29vw -37vh 1px 1px #fff, 28vw 2vh 0px 0px #fff;
-  animation: zoom 32s alternate infinite;
+  animation: zoom 60s alternate infinite;
 }
 
 @keyframes zoom {

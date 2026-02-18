@@ -1,4 +1,5 @@
 <script setup>
+    import ListItem from './ListItem.vue';
     import { onMounted, useTemplateRef, ref } from 'vue'
     import { createGesture } from '@ionic/vue';
     
@@ -71,14 +72,24 @@
         <div class="header-decoration"></div>
 
         <div class="container" ref="setContainer">
-            <ListItem class="set" v-for="(item, index) in props.excerciseData" :class="[{'glass': item.active},{'glass-accent': item.isPr}]" :enable-gesture="true" :translation-y="containerTranslate" :max-displacement="40" @click="itemClicked(item)">
+            <ListItem 
+            class="set" 
+            v-for="(item, index) in props.excerciseData" 
+            :class="[{'glass': item.active},{'glass-accent': item.isPr}]" 
+            :enable-gesture="true" 
+            :translation-y="containerTranslate" 
+            :max-displacement="40" 
+            left-icon="cardio.png" 
+            right-icon="cardio.png" 
+            @click="itemClicked(item)"
+            >
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ index + 1}}</p>
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ item.reps }} reps</p>
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-if="!editMode">{{item.weight}}kg</p>
             </ListItem>
         </div>
 
-        <div class="container" v-if="true">
+        <div class="container" v-if="props.excerciseData.length == 0">
             <div @click="emit('addSet', false)">
                 <p class="item-text">+</p>
             </div>

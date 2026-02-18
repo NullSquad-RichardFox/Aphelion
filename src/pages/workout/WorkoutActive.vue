@@ -9,12 +9,10 @@ import { isNumeric } from '../../utils/conversion';
 const route = useRoute();
 const router = useRouter();
 
-// Defines
-
 const editMode = ref(true);
-
+const workoutId = ref(route.params.id);
 const workoutName = ref('');
-const workoutExercises = ref(); // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
+const workoutExercises = ref([]); // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
 
 const timerVal = ref(0);
 let intervalId = null;
@@ -27,52 +25,56 @@ const timeString = computed(() => {
 });
 
 const addExercise = async (id) => {
-    console.log(id);
     const res = await queryDatabase(`SELECT * FROM exercises WHERE id=${id}`);
-    workoutExercises.push({id: id, name: res.values[0].name, sets: []});
+    workoutExercises.value.push({id: id, name: res.values[0].name, sets: []});
 }
 
 const loadWorkoutData = async () => {
-    const exists = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${route.params.id});`)
-    console.log(exists);
+    let isWorkoutStored = false;
+    
+    const exists = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`)
 
-    if (exists) {
+    isWorkoutStored = exists.values[0].workoutExists === 1;
+
+    if (isWorkoutStored) {
         // this might not be nescessary if exists already contains the values
-        const current = await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${route.params.id}`).values[0];
+        const current = (await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`)).values[0];
         
         workoutName.value = current.name;
         timerVal.value = current.timer;
-        editMode.value = current.editMode;
-        
+        editMode.value = current.editMode === 1;
+
         // set workoutExercises 
     }
     else {
         let exercises = [];
         let sets = [];
 
-        if (!isNumeric(route.params.id)) {
+        if (!isNumeric(workoutId.value)) {
             // new workout
-            workoutName.value = route.params.id;
+            workoutName.value = workoutId.value;
             editMode.value = true;
         } else {            
             // old workout
-            const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${route.params.id}`);
+            const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${workoutId.value}`);
             const workout = res.values[0];
             workoutName.value = workout.name;
-            sets = JSON.parse(workout.set);
+            sets = JSON.parse(workout.sets);
             exercises = JSON.parse(workout.exercises);
             editMode.value = history.state.editMode;
 
             // set workoutExercises;
         }
 
-        await queryDatabase(`INSERT INTO currentWorkout (id, name, timer, editMode, exercises, setsTotal)`, [
-            isNumeric(route.params.id) ? route.params.id : -1,
+        await queryDatabase(`INSERT INTO currentWorkout (id, name, timer, editMode, exercises, setsTotal, setsWorked, weights) VALUES (?,?,?,?,?,?,?,?)`, [
+            isNumeric(workoutId.value) ? workoutId.value : -1,
             workoutName.value,
             timerVal.value,
-            editMode.value,
+            editMode.value ? 1 : 0,
             JSON.stringify(exercises),
-            JSON.stringify(sets)
+            JSON.stringify(sets),
+            JSON.stringify([]),
+            JSON.stringify([])
         ]);
 
     } 
@@ -113,40 +115,45 @@ onUnmounted(() => {
         setsActive.push(active);
     }
 
-    queryDatabase(`UPDATE currentWorkout SET 
-        timer=${timerVal.value}, 
-        exercises=${JSON.stringify(exercises)}, 
-        setsTotal=${JSON.stringify(setsTotal)}, 
-        setsWorked=${JSON.stringify(setsActive)}, 
-        weights=${JSON.stringify(weights)} 
-    WHERE id=${isNumeric(route.params.id) ? route.params.id : -1}`);
+    queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`).then((res) => {
+        if (res.values[0].workoutExists === 1) {
+            queryDatabase(`UPDATE currentWorkout SET 
+                timer=${timerVal.value}, 
+                exercises=${JSON.stringify(exercises)}, 
+                setsTotal=${JSON.stringify(setsTotal)}, 
+                setsWorked=${JSON.stringify(setsActive)}, 
+                weights=${JSON.stringify(weights)} 
+            WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`);
+        }
+    })
+
 });
 
 const finishWorkout = async () => {
     if (editMode.value) {
-        // Update existing workout
-        if (isNumeric(route.params.id)) {
-            let exs = [];
-            let sets = [];
-            
-            for (const exercise of workoutExercises.value) {
-                exs.push(exercise.id);
-                sets.push(exercise.sets.length);
-            }
-
-            await queryDatabase(`UPDATE workoutTemplates SET name=${workoutName.value}, exercises=${JSON.stringify(exs)}, sets=${JSON.stringify(sets)} WHERE id=${route.params.id}`);
+        let exs = [];
+        let sets = [];
+        
+        for (const exercise of workoutExercises.value) {
+            exs.push(exercise.id);
+            sets.push(exercise.sets.length);
         }
 
-        // Add new workout 
-        else {
+        if (isNumeric(workoutId.value)) { // Update existing workout
+            await queryDatabase(`UPDATE workoutTemplates SET 
+                name=${workoutName.value}, 
+                exercises=${JSON.stringify(exs)}, 
+                sets=${JSON.stringify(sets)} 
+                WHERE id=${workoutId.value}
+            `);
+        } else { // Add new workout             
             await queryDatabase(`INSERT INTO workoutTemplates (name, exercises, sets) VALUES (?,?,?);`, [
                 workoutName.value, 
-                JSON.stringify(workoutExercises.value), 
-                JSON.stringify(workoutSets.value)
+                JSON.stringify(exs), 
+                JSON.stringify(sets)
             ]);
         }
-    } else {
-        // Store workout data
+    } else { // Store workout data
         for (const e of workoutExercises.value) {
             const res = await queryDatabase(`SELECT * FROM exercises WHERE id=${e.id}`).values[0];
             let data = JSON.parse(res.data);
@@ -160,7 +167,7 @@ const finishWorkout = async () => {
                 }
             }
             
-            data.push({workout: route.params.id, date: Date.now(), weights: weights, sets: sets});
+            data.push({workout: workoutId.value, date: Date.now(), weights: weights, sets: sets});
             await queryDatabase(`UPDATE exercises SET data=${JSON.stringify(data)} WHERE id=${e.id}`);
         }
     }
@@ -185,7 +192,7 @@ const addSet = (item, warmUp) => {
         <Excercise class="exc-container" v-for="item in workoutExercises" :excercise-title="item.name" :excercise-data="item.sets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
         
         <div class="control-panel">
-            <RouterLink class="add-excercise button-style" :to="`/workout/${route.params.id}/search`">+</RouterLink>
+            <RouterLink class="add-excercise button-style" :to="`/workout/${workoutId}/search`">+</RouterLink>
             <div class="workout-stop-panel">
                 <RouterLink class="button-style" to="/workout">x</RouterLink>
                 <div class="button-style" @click="finishWorkout">o</div>

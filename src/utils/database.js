@@ -29,27 +29,6 @@ const myTables = [
         weights TEXT
         `}]; // data = [{ workout, date, weights, sets }]
 
-async function dropTable(table) {
-    for (item of myTables) {
-        if (item.name === table) {
-            await db.open();
-            await db.execute(`DROP TABLE ${table}`);
-            await db.close();
-            return;
-        }
-    }
-}
-
-async function createTable(table) {
-    for (item of myTables) {
-        if (item.name === table) {
-            await db.open();
-            await db.execute(`CREATE TABLE IF NOT EXISTS ${item.name} (${item.execute});`);
-            await db.close();
-        }
-    }
-}
-
 async function loadDatabase() {
     const ret = await sqlite.checkConnectionsConsistency();
     const isConn = (await sqlite.isConnection('db_aphelion', false)).result;
@@ -62,13 +41,34 @@ async function loadDatabase() {
 
     await db.open();
 
-    await dropTable('workoutTemplates');
-    await dropTable('exercises');
-    await dropTable('currentWorkout');
+    await db.execute(`DROP TABLE workoutTemplates`);
+    await db.execute(`DROP TABLE exercises`);
+    await db.execute(`DROP TABLE currentWorkout`);
 
-    await createTable('workoutTemplates');
-    await createTable('exercises');
-    await createTable('currentWorkout');
+    await db.execute(`CREATE TABLE workoutTemplates (        
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        exercises TEXT,
+        sets TEXT
+        )`);
+
+    await db.execute(`CREATE TABLE exercises (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        musclesWorked TEXT,
+        data TEXT
+        )`);
+
+    await db.execute(`CREATE TABLE currentWorkout (
+        id INTEGER PRIMARY KEY NOT NULL,
+        name TEXT,
+        timer INTEGER,
+        editMode BOOLEAN,
+        exercises TEXT,
+        setsTotal TEXT,
+        setsWorked TEXT,
+        weights TEXT
+        )`);
 
     await db.close();
 }
@@ -78,6 +78,8 @@ function closeDatabase() {
 }
 
 async function queryDatabase(querry, data) {
+    console.log(querry ,data);
+    
     try {
         await db.open();
         const res = await db.query(querry , data);
@@ -91,5 +93,5 @@ async function queryDatabase(querry, data) {
 }
 
 export {
-    loadDatabase, closeDatabase, queryDatabase, dropTable, createTable
+    loadDatabase, closeDatabase, queryDatabase
 }

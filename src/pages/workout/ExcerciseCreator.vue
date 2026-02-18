@@ -38,7 +38,7 @@ const createExcercise = async () => {
         return;
     }
 
-    await queryDatabase(`INSERT INTO exercises (name, musclesWorked, data) VALUES (?,?,?,?)`, [excName.value, JSON.stringify(activeMuscles), JSON.stringify([])]);
+    await queryDatabase(`INSERT INTO exercises (name, musclesWorked, data) VALUES (?,?,?)`, [excName.value, JSON.stringify(activeMuscles), JSON.stringify([])]);
 
     router.go(-1);
 };

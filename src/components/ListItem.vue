@@ -8,7 +8,8 @@ const props = defineProps({
     enableGesture: Boolean,
     tranlationY: Number,
     maxDisplacement: Number,
-    icons: Array
+    leftIcon: String,
+    rightIcon: String
 });
 
 const emit = defineEmits(['swipeLeft', 'swipeRight']);
@@ -36,7 +37,7 @@ onMounted(() => {
         el: containerHandle.value,
         threshold: 10,
         direction: 'x',
-        gestureName: "horizontal-swipe",
+        gestureName: "horizontal-swipe-list-item",
         onMove: (e) => horizontalSwipeMove(e),
         onEnd: (e) => horizontalSwipeEnd(e)
     });
@@ -51,9 +52,8 @@ onMounted(() => {
 <div ref="container" :style="{'transform':'translate(' + swipeTranslate + 'px,' + props.tranlationY + 'px)'}"> 
     <slot />
         
-    <div class="icon" v-for="(icon, index) in props.icons" :style="[index % 2 ? 'left:0' : 'right:0']" v-if="(index == 0 && swipeTranslate == props.maxDisplacement) || (index == 1 && swipeTranslate == -props.maxDisplacement)">
-        <img :src="imageFromSrc(icon)" alt="">
-    </div>
+    <img :src="imageFromSrc(props.leftIcon)" style="left:0" v-if="swipeTranslate == props.maxDisplacement" alt="">
+    <img :src="imageFromSrc(props.rightIcon)" style="right:0" v-if="swipeTranslate == -props.maxDisplacement" alt="">
 </div>
 
 </template>
@@ -62,12 +62,12 @@ onMounted(() => {
 
 .icon {
     position: absolute;
-    transform: translateX(0);
-    height: 100%;
+    height: 10px;
 }
 
 .icon img {
-    height: 100%;
+    height: 10px;
+    width: 10px;
 }
 
 </style>

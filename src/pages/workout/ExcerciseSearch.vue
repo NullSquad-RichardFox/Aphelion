@@ -7,19 +7,19 @@ const router = useRouter();
 const route = useRoute();
 
 // get all excercises
-const allExcercises = ref(new Map());
+const allExcercises = ref();
 const searchBarText = ref('');
 
 const goBack = () => {
     router.push(`/workout/${route.params.id}`);
 }
 
-const fulfillSearch = (name) => {
-    name.startsWith(searchBarText.value);
+const fulfillsSearch = () => {
+    //name.startsWith(searchBarText.value);
+    return true;
 }
 
 const exercisePicked = (id) => {  
-    console.log(id)
     router.push({ path: `/workout/${route.params.id}`, state: { exercise: id }});
 }
 
@@ -35,13 +35,13 @@ onMounted(() => {
     <div class="container">
         <input class="search-bar" type="text" placeholder="Excercise Name" v-model="searchBarText">
         <div class="results">
-            <div class="excercise" v-for="item in allExcercises" v-if="fulfillsSearch(item.name)" @click="exercisePicked(item.id)">
+            <div class="excercise" v-for="item in allExcercises" @click="exercisePicked(item.id)">
                 <p>{{ item.name }}</p>
             </div>
         </div>
         <div class="control-panel">
             <div class="button-style" @click="goBack">x</div>
-            <RouterLink class="button-style" to="/workout/creator">+</RouterLink>
+            <RouterLink class="button-style" :to="`/workout/${route.params.id}/creator`">+</RouterLink>
         </div>
     </div>    
 </template>
