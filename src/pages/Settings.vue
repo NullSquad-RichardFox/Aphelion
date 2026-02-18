@@ -1,16 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getAllFiles, writeFile } from '../utils/filesystem'
 
 const model = defineModel();
 
 const rootDirFiles = ref([]);
 onMounted(() => {
-    /*for (file of getAllFiles()) {
-        rootDirFiles.push({path: file, selected: false});
-    }*/
 
-    writeFile('workoutTemplates.txt', '');
 })
 </script>
 

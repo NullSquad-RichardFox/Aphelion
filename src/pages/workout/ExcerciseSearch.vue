@@ -1,29 +1,28 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router';
-import { readFile, writeFile } from '../../utils/filesystem';
-import { uuid } from '../../utils/math';
+import { useRoute, useRouter } from 'vue-router';
+import { queryDatabase } from '../../utils/database'
 
 const router = useRouter();
+const route = useRoute();
 
 // get all excercises
 const allExcercises = ref(new Map());
 const searchBarText = ref('');
 
 const goBack = () => {
-    router.go(-1);
+    router.push(`/workout/${route.params.id}`);
 }
 
-const exercisePicked = () => {  
-    // pick?
-
-    router.go(-1);
+const exercisePicked = (id) => {  
+    console.log(id)
+    router.push({ path: `/workout/${route.params.id}`, state: { exercise: id }});
 }
 
 onMounted(() => {
-    readFile('excercises.txt').then((file) => {
-        allExcercises.value = new Map(file);
-    })
+    queryDatabase(`SELECT * FROM exercises`).then((res) => {      
+        allExcercises.value = res.values;
+    });
 });
 
 </script>
@@ -32,8 +31,8 @@ onMounted(() => {
     <div class="container">
         <input class="search-bar" type="text" placeholder="Excercise Name" v-model="searchBarText">
         <div class="results">
-            <div class="excercise" v-for="item in allExcercises" @click="exercisePicked">
-                <p>{{ item[1].name }}</p>
+            <div class="excercise" v-for="item in allExcercises" @click="exercisePicked(item.id)">
+                <p>{{ item.name + ' ' + item.id }}</p>
             </div>
         </div>
         <div class="control-panel">

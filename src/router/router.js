@@ -12,8 +12,8 @@ const routes = [
     { path: '/', component: HomeMenu },
     { path: '/workout', component: WorkoutMenu },
     { path: '/workout/:id', component: WorkoutActive },
-    { path: '/workout/search', component: ExerciseSearch },    
-    { path: '/workout/creator', component: ExerciseCreator },
+    { path: '/workout/:id/search', component: ExerciseSearch },    
+    { path: '/workout/:id/creator', component: ExerciseCreator },
     { path: '/settings', component: Settings}
 ]
 

@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { onMounted, ref, useTemplateRef } from 'vue';
 import { createGesture } from '@ionic/vue';
 import { clamp } from '../../utils/math';
-import { loadDatabase, closeDatabase, querryDatabase } from '../../utils/database';
+import { queryDatabase } from '../../utils/database';
 
 const userWorkouts = ref([]);
 const openNewWorkout = ref(false);
@@ -35,15 +35,12 @@ const verticalSwipeEnd = (e) => {
 };
 
 onMounted(() => {
-    loadDatabase().then(() => {
-        querryDatabase('SELECT * FROM workoutTemplates').then((res) => {
-            userWorkouts.value = res.values;
+    queryDatabase('SELECT * FROM workoutTemplates').then((res) => {
+        userWorkouts.value = res.values;
 
-            if (userWorkouts.value != null) {
-                isWorkoutListEmpty.value = false;
-            }
-        });
-
+        if (userWorkouts.value.length != 0) {
+            isWorkoutListEmpty.value = false;
+        }
     });
 
     const gesture = createGesture({
@@ -63,7 +60,7 @@ const createWorkout = () => {
     if (workoutName.value == '') return;
 
     openNewWorkout.value = false;
-    router.push(`/workout/${workoutName.value}`);
+    router.push({ path: `/workout/${workoutName.value}`, state: { editMode: true }});
 };
 
 const workoutPicked = (id) => {

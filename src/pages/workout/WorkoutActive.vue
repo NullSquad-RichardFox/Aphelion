@@ -3,24 +3,19 @@ import Excercise from '../../components/Excercise.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
-import { loadDatabase, closeDatabase, querryDatabase } from '../../utils/database';
+import { queryDatabase } from '../../utils/database';
 import { isNumeric } from '../../utils/conversion';
-import { uuid } from '../../utils/math';
 
 const route = useRoute();
 const router = useRouter();
 
 // Defines
 
-const editMode = ref(!isNumeric(route.params.id));
+const editMode = ref(history.state?.editMode != undefined);
 
 const workoutName = ref('');
-const workoutExerciseId = ref([]);
-const workoutExerciseNames = ref([]);
 const workoutSets = ref([]);
-const workoutWeights = ref([]);
-
-const workoutExercises = ref();
+const workoutExercises = ref(); // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
 
 const timerVal = ref(0);
 let intervalId = null;
@@ -32,27 +27,37 @@ const timeString = computed(() => {
     return hours == 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 });
 
+const addExercise = async (id) => {
+    console.log(id);
+    const res = await queryDatabase(`SELECT * FROM exercises WHERE id=${id}`);
+    workoutExercises.push({id: id, name: res.values[0].name, sets: []});
+}
+
+const loadWorkoutData = async () => {
+    const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${route.params.id}`);
+    const workout = res.values[0];
+
+    workoutName.value = workout.name;
+
+    const exercises = await queryDatabase(`SELECT * FROM exercises WHERE id IN (${JSON.parse(workout.exercises).join(',')})`);
+}
+
 onMounted(() => {
     if (!editMode.value) {
-        // Set up timer
         intervalId = setInterval(() => {
             timerVal.value++;
         }, 1000);
+    }
 
-        // Load workout data
-        loadDatabase().then(() => {
-            querryDatabase(`SELECT * FROM workoutTemplates WHERE id=${route.params.id}`).then((res) => {
-                const workout = res.values[0];
-                workoutName.value = workout.name;
-                querryDatabase(`SELECT * FROM exercises`).then((exercises) => {
-                    console.log(exercises.values);
-                });
-            });
-
+    if (isNumeric(route.params.id)) {
+        loadWorkoutData().then(() => {
+            if (history.state?.exercise != undefined) addExercise(history.state.exercise);
         });
     } else {
         workoutName.value = route.params.id;
+        if (history.state?.exercise != undefined) addExercise(history.state.exercise);
     }
+
 });
 
 onUnmounted(() => {
@@ -61,38 +66,39 @@ onUnmounted(() => {
     }
 });
 
-const finishWorkout = () => {
+const finishWorkout = async () => {
     if (editMode.value) {
-        loadDatabase().then(() => {
-            console.log(workoutName.value);
-            querryDatabase(`
-                INSERT INTO workoutTemplates (id, name, exercises, sets) 
-                VALUES (?,?,?,?);`, [uuid(), workoutName.value, JSON.stringify(workoutExercises.value), JSON.stringify(workoutSets.value)]
-            ).then((v) => {
-                console.log(v);
-                router.push('/workout');
-            })
-        })
+        // Update existing workout
+        if (isNumeric(route.params.id)) {
+            let exs = [];
+            let sets = [];
+            
+            for (const exercise of workoutExercises) {
+                exs.push(exercise.id);
+                sets.push(exercise.sets.length);
+            }
 
+            await queryDatabase(`UPDATE workoutTemplates SET name=${workoutName.value}, exercises=${JSON.stringify(exs)}, sets=${JSON.stringify(sets)} WHERE id=${route.params.id}`);
+        }
+
+        // Add new workout 
+        else {
+            await queryDatabase(`INSERT INTO workoutTemplates (name, exercises, sets) VALUES (?,?,?);`, [
+                workoutName.value, 
+                JSON.stringify(workoutExercises.value), 
+                JSON.stringify(workoutSets.value)
+            ]);
+        }
     } else {
-        // store workout data
+        // Store workout data
+
     }
+
+    await router.push('/workout');
 }
 
-const addExcercise = (id) => {
-        readFile('excercises.txt').then((v) => {
-        allExcercises.value = new Map(v);
-        
-        if (allExcercises.value.has(id)) {
-            data.value.push({excName: allExcercises.value.get(id).name, excID: id, excSets: []});
-        } else {
-            console.error('Excercise not present', id);
-        }
-    });   
-};
-
 const addSet = (item, warmUp) => {
-    item.excSets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp})
+    item.sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp})
 };
 
 </script>
@@ -104,10 +110,10 @@ const addSet = (item, warmUp) => {
 
         <div class="space"></div>
 
-        <Excercise class="exc-container" v-for="item in workoutExercises" :excercise-title="item.excName" :excercise-data="item.excSets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
+        <Excercise class="exc-container" v-for="item in workoutExercises" :excercise-title="item.name" :excercise-data="item.sets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
         
         <div class="control-panel">
-            <RouterLink class="add-excercise button-style" to="/workout/search">+</RouterLink>
+            <RouterLink class="add-excercise button-style" :to="`/workout/${route.params.id}/search`">+</RouterLink>
             <div class="workout-stop-panel">
                 <RouterLink class="button-style" to="/workout">x</RouterLink>
                 <div class="button-style" @click="finishWorkout">o</div>

@@ -2,7 +2,7 @@
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { readFile, writeFile } from '../../utils/filesystem';
+import { queryDatabase } from '../../utils/database';
 
 const router = useRouter();
 const excName = ref('');
@@ -22,7 +22,7 @@ const muscleParts = ref([
     {name: 'Calfs', active: false}
 ]);
 
-const createExcercise = () => {
+const createExcercise = async () => {
     if (excName.value == '') {
         return;
     }
@@ -38,10 +38,9 @@ const createExcercise = () => {
         return;
     }
 
-    readFile('excercises.txt').then((f) => {
-        const exercises = new Map(f);
-        router.push('/workout/search');
-    });
+    await queryDatabase(`INSERT INTO exercises (name, musclesWorked, data) VALUES (?,?,?,?)`, [excName.value, JSON.stringify(activeMuscles), JSON.stringify([])]);
+
+    router.go(-1);
 };
 
 const goBack = () => {

@@ -15,18 +15,24 @@ async function loadDatabase() {
 
     await db.open();
 
+    await db.execute('DROP TABLE workoutTemplates');
+    await db.execute('DROP TABLE exercises');
+    await db.execute('DROP TABLE currentWorkout');
+
     await db.execute(`CREATE TABLE IF NOT EXISTS workoutTemplates (
-        id INTEGER PRIMARY KEY NOT NULL,
+        id INTEGER AUTO_INCREMENT NOT NULL,
         name TEXT NOT NULL,
         exercises TEXT,
-        sets TEXT
+        sets TEXT,
+        PRIMARY KEY (id)
     );`);
 
     await db.execute(`CREATE TABLE IF NOT EXISTS exercises (
-        id INTEGER PRIMARY KEY NOT NULL,
+        id INTEGER AUTO_INCREMENT NOT NULL,
         name TEXT,
         musclesWorked TEXT,
-        data TEXT
+        data TEXT,
+        PRIMARY KEY (id)
     );`) // data = [ { workoutId, date, sets, weights } ]
 
     await db.execute(`CREATE TABLE IF NOT EXISTS currentWorkout (
@@ -47,7 +53,7 @@ function closeDatabase() {
     sqlite.closeConnection('db_aphelion', false);
 }
 
-async function querryDatabase(querry, data) {
+async function queryDatabase(querry, data) {
     try {
         await db.open();
         const res = await db.query(querry , data);
@@ -61,5 +67,5 @@ async function querryDatabase(querry, data) {
 }
 
 export {
-    loadDatabase, closeDatabase, querryDatabase
+    loadDatabase, closeDatabase, queryDatabase
 }

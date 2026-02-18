@@ -1,6 +1,14 @@
 <script setup>
 import Footer from './components/Footer.vue'
 import Profile from './components/Profile.vue';
+
+import { onUnmounted } from 'vue';
+import { closeDatabase } from './utils/database';
+
+onUnmounted(() => {
+    closeDatabase();
+})
+
 </script>
 
 <template>
