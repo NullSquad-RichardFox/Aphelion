@@ -2,12 +2,26 @@
 import Footer from './components/Footer.vue'
 import Profile from './components/Profile.vue';
 
-import { onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { closeDatabase } from './utils/database';
 
-onUnmounted(() => {
-    closeDatabase();
+const router = useRouter();
+const showControlUI = ref(true);
+
+router.beforeEach((from, to) => {
+    if ((to.path.endsWith('/search') || to.path.endsWith('/creator')) && to.path.startsWith('/workout')) {
+      showControlUI.value = false;
+    } else {
+      showControlUI.value = true;
+    }
 })
+
+onUnmounted(() => {
+  closeDatabase();
+})
+
+
 
 </script>
 
@@ -16,8 +30,8 @@ onUnmounted(() => {
 
     <RouterView/>
 
-    <Profile/>
-    <Footer/>
+    <Profile v-if="showControlUI"/>
+    <Footer v-if="showControlUI"/>
 </template>
 
 <style scoped> 
