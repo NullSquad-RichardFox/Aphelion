@@ -16,6 +16,9 @@
     const titleHandle = useTemplateRef('titleRef');
     const containerHandle = useTemplateRef('setContainer');
 
+    const exerciseReps = ref(12);
+    const exerciseWeights = ref(0);
+
     onMounted(() => {
         const titleSwipeMove = (e) => {
             titleTranslate.value = e.deltaX;
@@ -85,8 +88,8 @@
             @click="itemClicked(item)"
             >
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ index + 1}}</p>
-                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ item.reps }} reps</p>
-                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-if="!editMode">{{item.weight}}kg</p>
+                <input type="text" name="reps" v-model="exerciseReps" onkeypress="this.style.width = (this.value.length) + 'ch';" class="item-text" :class="{'warm-up-text': item.isWarmUp}">reps</input>
+                <input type="text" name="weights" :placeholder="exerciseWeights + 'kg'" class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-if="!editMode"></input>
             </ListItem>
         </div>
 
@@ -129,6 +132,14 @@
 .item-text {
     margin: 0.2rem;
     font-size: 18px;
+    border: none;
+    background: none;
+    width: max-content;
+    color: #eee;
+}
+
+.item-text:focus {
+    border: none;
 }
 
 .warm-up-text {
