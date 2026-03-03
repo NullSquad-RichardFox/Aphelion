@@ -3,11 +3,13 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database'
 
+import ScrollBox from '../../components/ScrollBox.vue';
+
 const router = useRouter();
 const route = useRoute();
 
 // get all excercises
-const allExcercises = ref();
+const allExcercises = ref([]);
 const searchBarText = ref('');
 
 const goBack = () => {
@@ -34,11 +36,13 @@ onMounted(() => {
 <template>
     <div class="container">
         <input class="search-bar" type="text" placeholder="Excercise Name" v-model="searchBarText">
-        <div class="results">
-            <div class="excercise" v-for="item in allExcercises" @click="exercisePicked(item.id)">
-                <p>{{ item.name }}</p>
-            </div>
-        </div>
+        
+        <ScrollBox class="results" :items="allExcercises" :item-height="40" :buffer="5" :container-height="500">
+            <template #default="{item}" class="item">
+                <p class="item-text" @click="exercisePicked(item.id)">{{ item.name }}</p>
+            </template>
+        </ScrollBox>
+        
         <div class="control-panel">
             <div class="button-style" @click="goBack">x</div>
             <RouterLink class="button-style" :to="`/workout/${route.params.id}/creator`">+</RouterLink>
@@ -63,23 +67,23 @@ onMounted(() => {
 }
 
 .results {
+    position: relative;
     margin-left: 10%;
     margin-top: 1rem;
     width: 80%;
-    height: 500px;
+    scrollbar-width: none;
     background-color: rgba(73, 73, 73, 0.336);
-    overflow: hidden;
 }
 
-.excercise {
-    text-align: left;
-    border-radius: 2px;
-    margin: 0 0.25rem;
-    background-color: #6868688e;
+.item {
+    padding: 0; 
+    margin:0;
 }
 
-.excercise p {
-    margin-left: 0.2rem;
+.item-text {
+    padding: 0; 
+    margin: 0 0.5rem; 
+    line-height: 40px;
 }
 
 .control-panel {
