@@ -120,8 +120,6 @@ function closeDatabase() {
 }
 
 async function queryDatabase(querry, data) {
-    console.log(querry ,data);
-    
     try {
         await db.open();
         const res = await db.query(querry , data);

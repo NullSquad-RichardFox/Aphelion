@@ -7,19 +7,19 @@ import { queryDatabase } from '../../utils/database';
 const router = useRouter();
 const excName = ref('');
 const muscleParts = ref([
-    {name: 'Biceps', active: false},
-    {name: 'Triceps', active: false},
-    {name: 'Front delts', active: false},
-    {name: 'Mid delts', active: false},
-    {name: 'Rear delts', active: false},
-    {name: 'Pecs', active: false},
-    {name: 'Abs', active: false},
-    {name: 'Trapezoids', active: false},
-    {name: 'Lats', active: false},
-    {name: 'Glutes', active: false},
-    {name: 'Quads', active: false},
-    {name: 'Hamstrings', active: false},
-    {name: 'Calfs', active: false}
+    {name: 'Biceps', active: 0},
+    {name: 'Triceps', active: 0},
+    {name: 'Front delts', active: 0},
+    {name: 'Mid delts', active: 0},
+    {name: 'Rear delts', active: 0},
+    {name: 'Pecs', active: 0},
+    {name: 'Abs', active: 0},
+    {name: 'Trapezoids', active: 0},
+    {name: 'Lats', active: 0},
+    {name: 'Glutes', active: 0},
+    {name: 'Quads', active: 0},
+    {name: 'Hamstrings', active: 0},
+    {name: 'Calfs', active: 0}
 ]);
 
 const createExcercise = async () => {
@@ -27,18 +27,21 @@ const createExcercise = async () => {
         return;
     }
 
-    let activeMuscles = [];
+    let primaryMuscles = [];
+    let secondaryMuscles = [];
     for (const {name, active} of muscleParts.value) {
-        if (active) {
-            activeMuscles.push(name)
+        if (active === 1) {
+            primaryMuscles.push(name);
+        } else if (active === 2) {
+            secondaryMuscles.push(name);
         }
     }
 
-    if (activeMuscles.length == 0) {
+    if (primaryMuscles.length == 0) {
         return;
     }
 
-    await queryDatabase(`INSERT INTO exercises (name, musclesWorked, data) VALUES (?,?,?)`, [excName.value, JSON.stringify(activeMuscles), JSON.stringify([])]);
+    await queryDatabase(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, [excName.value, JSON.stringify(primaryMuscles), JSON.stringify(secondaryMuscles), JSON.stringify([])]);
 
     router.go(-1);
 };
@@ -53,7 +56,7 @@ const goBack = () => {
 <div class="container">
     <input type="text" placeholder="Excercise Name" v-model="excName" class="exc-name-input">
     <div class="muscle-menu">
-        <div class="button-style" v-for="item in muscleParts" @click="item.active = !item.active" :class="{active: item.active}">
+        <div class="button-style" v-for="item in muscleParts" @click="item.active = (item.active + 1) % 3" :class="{primary: item.active === 1, secondary: item.active === 2}">
             <p>{{ item.name }}</p>
         </div>
     </div>
@@ -96,8 +99,12 @@ const goBack = () => {
     margin: 0;
 }
 
-.active {
+.primary {
     border: 1px #eee solid;
+}
+
+.secondary {
+    border: 1px #808080 solid;
 }
 
 .control-panel {

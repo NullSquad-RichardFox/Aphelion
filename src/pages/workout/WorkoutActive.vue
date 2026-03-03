@@ -26,7 +26,7 @@ const timeString = computed(() => {
 
 const addExercise = async (id) => {
     const res = await queryDatabase(`SELECT * FROM exercises WHERE id=${id}`);
-    workoutExercises.value.push({id: id, name: res.values[0].name, sets: []});
+    workoutExercises.value.push({id: res.values[0].id, name: res.values[0].name, sets: []});
 }
 
 const loadWorkoutData = async () => {
@@ -45,7 +45,29 @@ const loadWorkoutData = async () => {
         editMode.value = current.editMode === 1;
 
         // set workoutExercises 
-    }
+        current.setsTotal
+        current.setsWorked
+        current.weights
+
+        const exercises = (await queryDatabase(`SELECT * FROM exercises WHERE id IN (${JSON.parse(current.exercises)})`)).values;
+        for (const e of exercises) {
+            let loadedSets = [];
+
+            const dataTotal = JSON(current.setsTotal);
+            const dataWorked = JSON(current.setsWorked);
+            const dataWeight = JSON(current.weight);
+
+            for (let i = 0; i < dataTotal.length; i++) {
+                for (let j = 0; j < dataTotal[i]; j++) {
+                    loadedSets.push({reps: 12, weight: dataWeight[j], active: false, isPr: false, isWarmUp: warmUp})
+                }
+            }
+            
+            
+
+            workoutExercises.value.push({id: e.id, name: e.name, sets: loadedSets})
+        }
+    }   
     else {
         let exercises = [];
         let sets = [];
@@ -101,10 +123,9 @@ onUnmounted(() => {
     let setsTotal = [];
     let setsActive = [];
     let weights = [];
-
-    for (const e in workoutExercises.value) {
+    for (const e of workoutExercises.value) {
         exercises.push(e.id);
-        setsTotal.push(e.sets.length);
+        setsTotal.push(e.sets == undefined ? 0 : e.sets.length);
 
         let active = 0;
         for (const s in e.sets) {
@@ -118,11 +139,11 @@ onUnmounted(() => {
     queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`).then((res) => {
         if (res.values[0].workoutExists === 1) {
             queryDatabase(`UPDATE currentWorkout SET 
-                timer=${timerVal.value}, 
-                exercises=${JSON.stringify(exercises)}, 
-                setsTotal=${JSON.stringify(setsTotal)}, 
-                setsWorked=${JSON.stringify(setsActive)}, 
-                weights=${JSON.stringify(weights)} 
+                timer='${timerVal.value}', 
+                exercises='${JSON.stringify(exercises)}', 
+                setsTotal='${JSON.stringify(setsTotal)}', 
+                setsWorked='${JSON.stringify(setsActive)}', 
+                weights='${JSON.stringify(weights)}' 
             WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`);
         }
     })
@@ -141,9 +162,9 @@ const finishWorkout = async () => {
 
         if (isNumeric(workoutId.value)) { // Update existing workout
             await queryDatabase(`UPDATE workoutTemplates SET 
-                name=${workoutName.value}, 
-                exercises=${JSON.stringify(exs)}, 
-                sets=${JSON.stringify(sets)} 
+                name='${workoutName.value}', 
+                exercises='${JSON.stringify(exs)}', 
+                sets='${JSON.stringify(sets)}'
                 WHERE id=${workoutId.value}
             `);
         } else { // Add new workout             
@@ -168,7 +189,7 @@ const finishWorkout = async () => {
             }
             
             data.push({workout: workoutId.value, date: Date.now(), weights: weights, sets: sets});
-            await queryDatabase(`UPDATE exercises SET data=${JSON.stringify(data)} WHERE id=${e.id}`);
+            await queryDatabase(`UPDATE exercises SET data='${JSON.stringify(data)}' WHERE id=${e.id}`);
         }
     }
 
