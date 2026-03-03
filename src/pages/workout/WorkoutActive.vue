@@ -29,77 +29,123 @@ const addExercise = async (id) => {
     workoutExercises.value.push({id: res.values[0].id, name: res.values[0].name, sets: []});
 }
 
-const loadWorkoutData = async () => {
-    let isWorkoutStored = false;
+const retrieveStoredWorkout = async () => {
+    const current = (await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`)).values[0];
     
+    workoutName.value = current.name;
+    timerVal.value = current.timer;
+    editMode.value = current.editMode === 1;
+
+    // set workoutExercises 
+    const dataExercises = JSON.parse(current.exercises);
+    const dataTotal = JSON.parse(current.setsTotal);
+    const dataWorked = JSON.parse(current.setsWorked);
+    const dataWeights = JSON.parse(current.weights);
+    const dataReps = JSON.parse(current.reps);
+    const exercises = (await queryDatabase(`SELECT * FROM exercises WHERE id IN (${dataExercises})`)).values;
+
+    let currentSet = 0;
+    for (let i = 0; i < dataTotal.length; i++) {
+        const ex = exercises.find((v) => v.id === dataExercises[i]);
+        let loadedSets = []
+        for (let j = 0; j < dataTotal[i]; j++) {
+            loadedSets.push({reps: dataReps[currentSet], weight: dataWeights[currentSet], active: j < dataWorked[i], isPr: false, isWarmUp: false});
+            currentSet++;
+        } 
+        workoutExercises.value.push({id: ex.id, name: ex.name, sets: loadedSets})
+    }
+}
+
+const createWorkout = async () => {
+    let exercises = [];
+    let sets = [];
+
+    if (!isNumeric(workoutId.value)) {
+        // new workout
+        workoutName.value = workoutId.value;
+        editMode.value = true;
+    } else {            
+        // old workout
+        const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${workoutId.value}`);
+        const workout = res.values[0];
+        workoutName.value = workout.name;
+        sets = JSON.parse(workout.sets);
+        exercises = JSON.parse(workout.exercises);
+        editMode.value = history.state.editMode;
+
+        const exerciseData = (await queryDatabase(`SELECT * FROM exercises WHERE id IN (${exercises})`)).values;
+        for (let i = 0; i < exercises.length; i++) {
+            const data = exerciseData.find((v) => v.id === exercises[i]);
+            let loadedSets = []
+            for (let j = 0; j < sets[i]; j++) {
+                loadedSets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false})
+            } 
+
+            workoutExercises.value.push({id: data.id, name: data.name, sets: loadedSets})
+        }
+    }
+
+    await queryDatabase(`INSERT INTO currentWorkout (id, name, timer, editMode, exercises, setsTotal, setsWorked, weights, reps) VALUES (?,?,?,?,?,?,?,?,?)`, [
+        isNumeric(workoutId.value) ? workoutId.value : -1,
+        workoutName.value,
+        timerVal.value,
+        editMode.value ? 1 : 0,
+        JSON.stringify(exercises),
+        JSON.stringify(sets),
+        JSON.stringify([]),
+        JSON.stringify([]),
+        JSON.stringify([])
+    ]);
+}
+
+const loadWorkoutData = async () => {   
     const exists = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`)
 
-    isWorkoutStored = exists.values[0].workoutExists === 1;
-
-    if (isWorkoutStored) {
-        // this might not be nescessary if exists already contains the values
-        const current = (await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`)).values[0];
-        
-        workoutName.value = current.name;
-        timerVal.value = current.timer;
-        editMode.value = current.editMode === 1;
-
-        // set workoutExercises 
-        current.setsTotal
-        current.setsWorked
-        current.weights
-
-        const exercises = (await queryDatabase(`SELECT * FROM exercises WHERE id IN (${JSON.parse(current.exercises)})`)).values;
-        for (const e of exercises) {
-            let loadedSets = [];
-
-            const dataTotal = JSON(current.setsTotal);
-            const dataWorked = JSON(current.setsWorked);
-            const dataWeight = JSON(current.weight);
-
-            for (let i = 0; i < dataTotal.length; i++) {
-                for (let j = 0; j < dataTotal[i]; j++) {
-                    loadedSets.push({reps: 12, weight: dataWeight[j], active: false, isPr: false, isWarmUp: warmUp})
-                }
-            }
-            
-            
-
-            workoutExercises.value.push({id: e.id, name: e.name, sets: loadedSets})
+    if (exists.values[0].workoutExists === 1) {
+        const current = (await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`)).values[0]
+        if (current.name === workoutId.value) {
+            await retrieveStoredWorkout();   
         }
-    }   
+        else {
+            await createWorkout();
+        }
+    }
     else {
-        let exercises = [];
-        let sets = [];
+        await createWorkout();
+    } 
+}
 
-        if (!isNumeric(workoutId.value)) {
-            // new workout
-            workoutName.value = workoutId.value;
-            editMode.value = true;
-        } else {            
-            // old workout
-            const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${workoutId.value}`);
-            const workout = res.values[0];
-            workoutName.value = workout.name;
-            sets = JSON.parse(workout.sets);
-            exercises = JSON.parse(workout.exercises);
-            editMode.value = history.state.editMode;
+const storeTempWorkoutData = async () => {
+    let exercises = [];
+    let setsTotal = [];
+    let setsActive = [];
+    let weights = [];
+    let reps = [];
+    for (const e of workoutExercises.value) {
+        exercises.push(e.id);
+        setsTotal.push(e.sets == undefined ? 0 : e.sets.length);
 
-            // set workoutExercises;
+        let active = 0;
+        for (const s of e.sets) {
+            weights.push(s.weight);
+            reps.push(s.reps)
+            if (s.active) active++;
         }
 
-        await queryDatabase(`INSERT INTO currentWorkout (id, name, timer, editMode, exercises, setsTotal, setsWorked, weights) VALUES (?,?,?,?,?,?,?,?)`, [
-            isNumeric(workoutId.value) ? workoutId.value : -1,
-            workoutName.value,
-            timerVal.value,
-            editMode.value ? 1 : 0,
-            JSON.stringify(exercises),
-            JSON.stringify(sets),
-            JSON.stringify([]),
-            JSON.stringify([])
-        ]);
+        setsActive.push(active);
+    }
 
-    } 
+    const res = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`)
+    if (res.values[0].workoutExists === 1) {
+        await queryDatabase(`UPDATE currentWorkout SET 
+            timer='${timerVal.value}', 
+            exercises='${JSON.stringify(exercises)}', 
+            setsTotal='${JSON.stringify(setsTotal)}', 
+            setsWorked='${JSON.stringify(setsActive)}', 
+            weights='${JSON.stringify(weights)}', 
+            reps='${JSON.stringify(reps)}'
+        WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`);
+    }
 }
 
 onMounted(() => {
@@ -119,35 +165,7 @@ onUnmounted(() => {
         clearInterval(intervalId);
     }
 
-    let exercises = [];
-    let setsTotal = [];
-    let setsActive = [];
-    let weights = [];
-    for (const e of workoutExercises.value) {
-        exercises.push(e.id);
-        setsTotal.push(e.sets == undefined ? 0 : e.sets.length);
-
-        let active = 0;
-        for (const s in e.sets) {
-            weights.push(s.weight);
-            if (s.active) active++;
-        }
-
-        setsActive.push(active);
-    }
-
-    queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`).then((res) => {
-        if (res.values[0].workoutExists === 1) {
-            queryDatabase(`UPDATE currentWorkout SET 
-                timer='${timerVal.value}', 
-                exercises='${JSON.stringify(exercises)}', 
-                setsTotal='${JSON.stringify(setsTotal)}', 
-                setsWorked='${JSON.stringify(setsActive)}', 
-                weights='${JSON.stringify(weights)}' 
-            WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`);
-        }
-    })
-
+    storeTempWorkoutData();
 });
 
 const finishWorkout = async () => {
@@ -197,6 +215,11 @@ const finishWorkout = async () => {
     await router.push('/workout');
 }
 
+const cancelWorkout = async () => {
+    await queryDatabase(`DELETE FROM currentWorkout`);
+    await router.push('/workout');
+}
+
 const addSet = (item, warmUp) => {
     item.sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp})
 };
@@ -215,7 +238,7 @@ const addSet = (item, warmUp) => {
         <div class="control-panel">
             <RouterLink class="add-excercise button-style" :to="`/workout/${workoutId}/search`">+</RouterLink>
             <div class="workout-stop-panel">
-                <RouterLink class="button-style" to="/workout">x</RouterLink>
+                <div class="button-style" @click="cancelWorkout">x</div>
                 <div class="button-style" @click="finishWorkout">o</div>
             </div>
         </div>

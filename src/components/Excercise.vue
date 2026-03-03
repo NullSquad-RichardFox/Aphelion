@@ -38,6 +38,7 @@
 
         const containerSwipeMove = (e) => {
             containerTranslate.value = e.deltaY;
+            console.log(e.deltaY);
         };
 
         const containerSwipeEnd = (e) => {
@@ -76,7 +77,7 @@
             class="set" 
             v-for="(item, index) in props.excerciseData" 
             :class="[{'glass': item.active},{'glass-accent': item.isPr}]" 
-            :enable-gesture="true" 
+            :enable-gesture="false" 
             :translation-y="containerTranslate" 
             :max-displacement="40" 
             left-icon="cardio.png" 

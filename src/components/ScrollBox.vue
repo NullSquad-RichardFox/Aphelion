@@ -11,10 +11,6 @@ const props = defineProps({
 const container = useTemplateRef('container')
 const scrollTop = ref(0)
 
-const totalHeight = computed(() =>
-    props.items.length * props.itemHeight
-)
-
 const startIndex = computed(() =>
     Math.max(
         0,

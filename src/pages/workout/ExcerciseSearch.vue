@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database'
 
@@ -16,10 +16,9 @@ const goBack = () => {
     router.push(`/workout/${route.params.id}`);
 }
 
-const fulfillsSearch = () => {
-    //name.startsWith(searchBarText.value);
-    return true;
-}
+const filteredItem = computed(() => {
+    return allExcercises.value.filter(ex => ex.name.toLowerCase().includes(searchBarText.value.toLowerCase()))
+})
 
 const exercisePicked = (id) => {  
     router.push({ path: `/workout/${route.params.id}`, state: { exercise: id }});
@@ -37,7 +36,7 @@ onMounted(() => {
     <div class="container">
         <input class="search-bar" type="text" placeholder="Excercise Name" v-model="searchBarText">
         
-        <ScrollBox class="results" :items="allExcercises" :item-height="40" :buffer="5" :container-height="500">
+        <ScrollBox class="results" :items="filteredItem" :item-height="40" :buffer="5" :container-height="500">
             <template #default="{item}" class="item">
                 <p class="item-text" @click="exercisePicked(item.id)">{{ item.name }}</p>
             </template>

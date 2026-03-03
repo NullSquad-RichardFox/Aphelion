@@ -42,7 +42,8 @@ async function loadDatabase() {
         exercises TEXT,
         setsTotal TEXT,
         setsWorked TEXT,
-        weights TEXT
+        weights TEXT,
+        reps TEXT
         )`);
 
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Dumbbell Biceps Curl", JSON.stringify(['biceps']), JSON.stringify(['forearms']), JSON.stringify([])]);

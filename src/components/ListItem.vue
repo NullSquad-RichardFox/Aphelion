@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, useTemplateRef } from 'vue'
+import { ref, onMounted, useTemplateRef, computed } from 'vue'
 import { createGesture } from '@ionic/vue'
 import { clamp } from '../utils/math'
 import { imageFromSrc } from '../utils/conversion';
@@ -45,11 +45,15 @@ onMounted(() => {
     horizontalGesture.enable(props.enableGesture);
 })
 
+const hello = computed(() => {
+    return {transform:`translateY(${props.tranlationY}px)`}
+})
+
 </script>
 
 <template> 
 
-<div ref="container" :style="{'transform':'translate(' + swipeTranslate + 'px,' + props.tranlationY + 'px)'}"> 
+<div ref="container" :style="hello"> 
     <slot />
         
     <img :src="imageFromSrc(props.leftIcon)" style="left:0" v-if="swipeTranslate == props.maxDisplacement" alt="">
