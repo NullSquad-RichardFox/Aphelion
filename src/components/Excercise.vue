@@ -88,8 +88,8 @@
             @click="itemClicked(item)"
             >
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ index + 1}}</p>
-                <input type="text" name="reps" v-model="exerciseReps" onkeypress="this.style.width = (this.value.length) + 'ch';" class="item-text" :class="{'warm-up-text': item.isWarmUp}">reps</input>
-                <input type="text" name="weights" :placeholder="exerciseWeights + 'kg'" class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-if="!editMode"></input>
+                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}"><span role="textbox" contenteditable="true" @input="item.reps = $event.target.innerText.trim()">{{ item.reps }}</span> reps</p>
+                <p v-if="!props.editMode" class="item-text" :class="{'warm-up-text': item.isWarmUp}"><span role="textbox" contenteditable="true" @input="item.weight = $event.target.innerText.trim()">{{ item.weight }}</span>kg</p>
             </ListItem>
         </div>
 
@@ -134,12 +134,11 @@
     font-size: 18px;
     border: none;
     background: none;
-    width: max-content;
     color: #eee;
 }
 
 .item-text:focus {
-    border: none;
+    outline: none;
 }
 
 .warm-up-text {
