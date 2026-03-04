@@ -101,8 +101,8 @@ const workoutPicked = (id) => {
     <div class="create-workout-window" v-if="openNewWorkout">
         <input type="text" v-model="workoutName" placeholder="Workout Title" class="workout-name-input">
         <div class="confirm-panel">
-            <div class="button-style" @click="createWorkout">o</div>
             <div class="button-style" @click="openNewWorkout = false">x</div>
+            <div class="button-style" @click="createWorkout">o</div>
         </div>
     </div>
 </div>
@@ -187,19 +187,26 @@ const workoutPicked = (id) => {
 .create-workout-window {
     position: absolute;
     top: 40vh;
-    left: 0.5rem;
-    width: calc(100vw - 1.3rem);
+    left: 1.5rem;
+    width: calc(100vw - 3.3rem);
     background-color: #272727;
     border: 2px #eee solid;
 }
 
 .workout-name-input {
-    width: 90%;
-    margin: 0.5rem 0rem;
+    display: block;
+    width: calc(100% - 1.5rem);
+    margin: 0.8rem auto 0.5rem auto;
+    background: none;
+    border: 1px solid #eee;
+    padding: 0.1rem;
+    border-radius: 4px;
+    color: #eee;
+    font-size: 20px;
 }
 
 .confirm-panel {
-    margin: 0 1rem 0.5rem 1rem;
+    margin: 0 0.75rem 0.5rem 0.75rem;
     display: grid; 
     grid-template-columns: auto auto;
     gap: 0.5rem;
@@ -209,6 +216,10 @@ const workoutPicked = (id) => {
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
     border: 1px #eee solid;
+    text-align: center;
+    text-decoration: none;
+    color: #eee;
+    font-size: 24px;
 }
 
 </style>

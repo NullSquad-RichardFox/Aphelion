@@ -57,12 +57,19 @@ onMounted(() => {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #202020;
+    background-color: #1b1b1b;
 }
 
 .search-bar {
-    width: 80vw;
-    margin-top: 5rem;
+    display: block;
+    width: 20rem;
+    margin: 5rem auto 0 auto;
+    background: none;
+    border: 1px solid #eee;
+    padding: 0.1rem;
+    border-radius: 4px;
+    color: #eee;
+    font-size: 20px;
 }
 
 .results {
@@ -83,6 +90,7 @@ onMounted(() => {
     padding: 0; 
     margin: 0 0.5rem; 
     line-height: 40px;
+    font-size: 18px;
 }
 
 .control-panel {
@@ -96,6 +104,10 @@ onMounted(() => {
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
     border: 1px #eee solid;
+    text-align: center;
+    text-decoration: none;
+    color: #eee;
+    font-size: 24px;
 }
 
 </style>

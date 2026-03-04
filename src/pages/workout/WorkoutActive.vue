@@ -278,10 +278,9 @@ const addSet = (item, warmUp) => {
 
 .control-panel {
     margin: 0 1rem;
-}
-
-.add-excercise {
-    margin-bottom: 0.5rem;
+    display: grid; 
+    grid-template-rows: auto auto;
+    gap: 0.5rem;
 }
 
 .workout-stop-panel {
@@ -294,6 +293,10 @@ const addSet = (item, warmUp) => {
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
     border: 1px #eee solid;
+    text-align: center;
+    text-decoration: none;
+    color: #eee;
+    font-size: 24px;
 }
 
 </style>

@@ -54,9 +54,9 @@ const goBack = () => {
 <template>
 
 <div class="container">
-    <input type="text" placeholder="Excercise Name" v-model="excName" class="exc-name-input">
-    <div class="muscle-menu">
-        <div class="button-style" v-for="item in muscleParts" @click="item.active = (item.active + 1) % 3" :class="{primary: item.active === 1, secondary: item.active === 2}">
+    <input type="text" placeholder="Excercise Name" v-model="excName" class="search-bar">
+    <div class="menu">
+        <div class="item" v-for="item in muscleParts" @click="item.active = (item.active + 1) % 3" :class="{primary: item.active === 1, secondary: item.active === 2}">
             <p>{{ item.name }}</p>
         </div>
     </div>
@@ -70,33 +70,64 @@ const goBack = () => {
 
 <style scoped>
 
+
+
 .container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #202020;
+    background-color: #1b1b1b;
 }
 
-.exc-name-input {
-    margin-top: 5rem;
+.search-bar {
+    display: block;
+    width: 20rem;
+    margin: 5rem auto 0 auto;
+    background: none;
+    border: 1px solid #eee;
+    padding: 0.1rem;
+    border-radius: 4px;
+    color: #eee;
+    font-size: 20px;
 }
 
-.muscle-menu {
+.menu {
     margin: 0.5rem 0 0 10%;
     width: 80%;
     display: grid;
+    gap: 0.6rem;
+}
+
+.item {
+    background-color: rgba(37, 37, 37, 0.76);
+    border-radius: 3px;
+    padding: 0.1rem;
+}
+
+.item p {
+    padding: 0; 
+    margin:0;
+    text-align: center;
+    font-size: 18px;
+}
+
+.control-panel {
+    display: grid;
+    grid-template-columns: auto auto;
+    margin: 0.8rem 10% 0.5rem 10%;
     gap: 0.5rem;
 }
 
 .button-style {
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
-}
-
-.button-style p {
-    margin: 0;
+    border: 1px #eee solid;
+    text-align: center;
+    text-decoration: none;
+    color: #eee;
+    font-size: 24px;
 }
 
 .primary {
@@ -105,13 +136,6 @@ const goBack = () => {
 
 .secondary {
     border: 1px #808080 solid;
-}
-
-.control-panel {
-    display: grid;
-    grid-template-columns: auto auto;
-    margin: 0.5rem 10%;
-    gap: 0.5rem;
 }
 
 </style>
