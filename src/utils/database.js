@@ -3,49 +3,55 @@ import { SQLiteConnection, CapacitorSQLite } from "@capacitor-community/sqlite";
 const sqlite = new SQLiteConnection(CapacitorSQLite);
 let db = null;  
 
-async function loadDatabase() {
-    const ret = await sqlite.checkConnectionsConsistency();
-    const isConn = (await sqlite.isConnection('db_aphelion', false)).result;
+async function dropDatabase() {
+    await db.open();
     
-    if (ret.result && isConn) {
-        db = await sqlite.retrieveConnection('db_aphelion', false);
-    } else {
-        db = await sqlite.createConnection('db_aphelion', false, 'no-encryption', 1, false);
+    await db.execute(`DROP TABLE workoutTemplates`);
+    await db.execute(`DROP TABLE exercises`);
+    await db.execute(`DROP TABLE currentWorkout`);
+
+    await db.close();
+}
+
+async function createDatabase() {
+    await db.open();
+    try {
+        await db.execute(`CREATE TABLE workoutTemplates (        
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            exercises TEXT,
+            sets TEXT
+            )`);
+
+        await db.execute(`CREATE TABLE exercises (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            musclesPrimary TEXT,
+            musclesSecondary TEXT,
+            data TEXT
+            )`);
+
+        await db.execute(`CREATE TABLE currentWorkout (
+            id INTEGER PRIMARY KEY NOT NULL,
+            name TEXT,
+            timer INTEGER,
+            editMode BOOLEAN,
+            exercises TEXT,
+            setsTotal TEXT,
+            setsWorked TEXT,
+            weights TEXT,
+            reps TEXT
+            )`);
+
+        await populateDatabase();   
+    } catch (e) {
+        console.log(e)
     }
 
-    await db.open();
+    await db.close();
+}
 
-    /*await db.execute(`DROP TABLE workoutTemplates`);
-    await db.execute(`DROP TABLE exercises`);
-    await db.execute(`DROP TABLE currentWorkout`);*/
-
-    await db.execute(`CREATE TABLE workoutTemplates (        
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        exercises TEXT,
-        sets TEXT
-        )`);
-
-    await db.execute(`CREATE TABLE exercises (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        musclesPrimary TEXT,
-        musclesSecondary TEXT,
-        data TEXT
-        )`);
-
-    await db.execute(`CREATE TABLE currentWorkout (
-        id INTEGER PRIMARY KEY NOT NULL,
-        name TEXT,
-        timer INTEGER,
-        editMode BOOLEAN,
-        exercises TEXT,
-        setsTotal TEXT,
-        setsWorked TEXT,
-        weights TEXT,
-        reps TEXT
-        )`);
-
+async function populateDatabase() {
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Dumbbell Biceps Curl", JSON.stringify(['biceps']), JSON.stringify(['forearms']), JSON.stringify([])]);
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Barbell Biceps Curl", JSON.stringify(['biceps']), JSON.stringify(['forearms']), JSON.stringify([])]);
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Machine Biceps Curl", JSON.stringify(['biceps']), JSON.stringify(['forearms']), JSON.stringify([])]);
@@ -111,9 +117,19 @@ async function loadDatabase() {
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Barbell Romanian Deadlift", JSON.stringify(['hamstrings', 'glutes']), JSON.stringify(['forearms', 'lower back']), JSON.stringify([])]);
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Hip Thrust", JSON.stringify(['glutes']), JSON.stringify(['quads', 'calfs']), JSON.stringify([])]);
     await db.query(`INSERT INTO exercises (name, musclesPrimary, musclesSecondary, data) VALUES (?,?,?,?)`, ["Standing Calf Raises", JSON.stringify(['calfs']), JSON.stringify(['lower back']), JSON.stringify([])]);
+}
 
+async function loadDatabase() {
+    const ret = await sqlite.checkConnectionsConsistency();
+    const isConn = (await sqlite.isConnection('db_aphelion', false)).result;
+    
+    if (ret.result && isConn) {
+        db = await sqlite.retrieveConnection('db_aphelion', false);
+    } else {
+        db = await sqlite.createConnection('db_aphelion', false, 'no-encryption', 1, false);
+    }
 
-    await db.close();
+    await createDatabase();
 }
 
 function closeDatabase() {

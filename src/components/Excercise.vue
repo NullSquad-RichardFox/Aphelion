@@ -135,6 +135,7 @@
     border: none;
     background: none;
     color: #eee;
+    padding: 0.1rem;
 }
 
 .item-text:focus {
