@@ -17,7 +17,7 @@ const goBack = () => {
 }
 
 const filteredItem = computed(() => {
-    return allExcercises.value.filter(ex => ex.name.toLowerCase().includes(searchBarText.value.toLowerCase()))
+    return searchBarText.value === '' ? allExcercises.value : allExcercises.value.filter(ex => ex.name.toLowerCase().includes(searchBarText.value.toLowerCase()))
 })
 
 const exercisePicked = (id) => {  

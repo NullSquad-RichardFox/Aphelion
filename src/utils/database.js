@@ -15,9 +15,9 @@ async function loadDatabase() {
 
     await db.open();
 
-    await db.execute(`DROP TABLE workoutTemplates`);
+    /*await db.execute(`DROP TABLE workoutTemplates`);
     await db.execute(`DROP TABLE exercises`);
-    await db.execute(`DROP TABLE currentWorkout`);
+    await db.execute(`DROP TABLE currentWorkout`);*/
 
     await db.execute(`CREATE TABLE workoutTemplates (        
         id INTEGER PRIMARY KEY AUTOINCREMENT,
