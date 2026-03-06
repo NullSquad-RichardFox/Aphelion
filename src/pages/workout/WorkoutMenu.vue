@@ -9,7 +9,6 @@ import { queryDatabase } from '../../utils/database';
 
 const userWorkouts = ref([]);
 const openNewWorkout = ref(false);
-const isWorkoutListEmpty = ref(true);
 const workoutName = ref('');
 
 // Gestures
@@ -37,10 +36,6 @@ const verticalSwipeEnd = (e) => {
 onMounted(() => {
     queryDatabase('SELECT * FROM workoutTemplates').then((res) => {
         userWorkouts.value = res.values;
-
-        if (userWorkouts.value.length != 0) {
-            isWorkoutListEmpty.value = false;
-        }
     });
 
     const gesture = createGesture({
@@ -64,7 +59,17 @@ const createWorkout = () => {
 };
 
 const workoutPicked = (id) => {
-    router.push(`/workout/${id}`);
+    router.push({ path: `/workout/${id}`, state: { editMode: false }});
+}
+
+const removeWorkout = async (item) => {
+    const id = userWorkouts.value.indexOf(item);
+    await queryDatabase(`DELETE FROM workoutTemplates WHERE id=${userWorkouts.value[id].id}`);
+    userWorkouts.value.splice(id, 1);
+}
+
+const editWorkout = (id) => {
+    router.push({ path: `/workout/${id}`, state: { editMode: true }});
 }
 
 </script>
@@ -73,7 +78,7 @@ const workoutPicked = (id) => {
 <div class="container">
     <p class="title">Workouts</p>
     
-    <div v-if="!isWorkoutListEmpty">
+    <div v-if="userWorkouts.length !== 0">
         <p class="section-title">Next Workout</p>
         <div class="quick-access-workout" @click="workoutPicked(userWorkouts[0].id)">
             <p>{{ userWorkouts[0].name }}</p>
@@ -83,12 +88,11 @@ const workoutPicked = (id) => {
     <div>
         <p class="section-title">My Workouts</p>
         <div class="all-workouts" ref="allWorkoutsRef">
-            <ListItem class="workout-item" v-for="item in userWorkouts" @click="workoutPicked(item.id)" :tranlation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="50" :icons="['diet.png', 'gym.png']">
+            <ListItem class="workout-item" v-for="item in userWorkouts" @click="workoutPicked(item.id)" :translation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="[50,50]" @swipe-right="removeWorkout(item)" @swipe-left="editWorkout(item.id)">
                 <p>{{ item.name }}</p>
-                <img src="../../assets/editIcon.png" alt="" class="workout-edit">
             </ListItem>
 
-            <div v-if="isWorkoutListEmpty" class="workout-item centered" @click="openNewWorkout = true">
+            <div v-if="userWorkouts.length === 0" class="workout-item centered" @click="openNewWorkout = true">
                 <p>+</p>
             </div>
 
@@ -151,7 +155,12 @@ const workoutPicked = (id) => {
     background-color: #8e8e8e11;
     border-radius: 2px;
     padding: 0.2rem;
-    overflow: hidden;
+
+    height: auto;
+    max-height: 420px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 
 .workout-item {

@@ -1,5 +1,5 @@
 <script setup>
-import Excercise from '../../components/Excercise.vue';
+import Exercise from '../../components/Exercise.vue';
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
@@ -9,13 +9,12 @@ import { isNumeric } from '../../utils/conversion';
 const route = useRoute();
 const router = useRouter();
 
+let intervalId = null;
+const timerVal = ref(0);
 const editMode = ref(true);
 const workoutId = ref(route.params.id);
 const workoutName = ref('');
 const workoutExercises = ref([]); // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
-
-const timerVal = ref(0);
-let intervalId = null;
 
 const timeString = computed(() => {
     const hours = Math.floor(timerVal.value / 3600);
@@ -34,7 +33,7 @@ const retrieveStoredWorkout = async () => {
     
     workoutName.value = current.name;
     timerVal.value = current.timer;
-    editMode.value = current.editMode === 1;
+    editMode.value = history.state.editMode === undefined ? Boolean(current.editMode) : history.state.editMode;
 
     // set workoutExercises 
     const dataExercises = JSON.parse(current.exercises);
@@ -89,7 +88,7 @@ const createWorkout = async () => {
         isNumeric(workoutId.value) ? workoutId.value : -1,
         workoutName.value,
         timerVal.value,
-        editMode.value ? 1 : 0,
+        Number(editMode.value),
         JSON.stringify(exercises),
         JSON.stringify(sets),
         JSON.stringify([]),
@@ -102,13 +101,7 @@ const loadWorkoutData = async () => {
     const exists = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`)
 
     if (exists.values[0].workoutExists === 1) {
-        const current = (await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`)).values[0]
-        if (current.name === workoutId.value) {
-            await retrieveStoredWorkout();   
-        }
-        else {
-            await createWorkout();
-        }
+        await retrieveStoredWorkout();   
     }
     else {
         await createWorkout();
@@ -157,6 +150,7 @@ onMounted(() => {
         }
 
         if (history.state.exercise != undefined) addExercise(history.state.exercise);
+
     });
 });
 
@@ -164,8 +158,6 @@ onUnmounted(() => {
     if (intervalId != null ) {
         clearInterval(intervalId);
     }
-
-    storeTempWorkoutData();
 });
 
 const finishWorkout = async () => {
@@ -194,7 +186,7 @@ const finishWorkout = async () => {
         }
     } else { // Store workout data
         for (const e of workoutExercises.value) {
-            const res = await queryDatabase(`SELECT * FROM exercises WHERE id=${e.id}`).values[0];
+            const res = (await queryDatabase(`SELECT * FROM exercises WHERE id=${e.id}`)).values[0];
             let data = JSON.parse(res.data);
             let weights = [];
             let sets = [];
@@ -220,9 +212,23 @@ const cancelWorkout = async () => {
     await router.push('/workout');
 }
 
-const addSet = (item, warmUp) => {
-    item.sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp})
+const openSearch = async () => {
+    await storeTempWorkoutData();
+    await router.push(`/workout/${workoutId.value}/search`);
+}
+
+const addSet = (item, warmUp) => {    
+    if (warmUp) {
+        item.sets.unshift({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: true})
+    } else {
+        item.sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false})
+    }
+
 };
+
+const removeExercise = (index) => {
+    workoutExercises.value.splice(index, 1);
+}
 
 </script>
 
@@ -233,13 +239,15 @@ const addSet = (item, warmUp) => {
 
         <div class="space"></div>
 
-        <Excercise class="exc-container" v-for="item in workoutExercises" :excercise-title="item.name" :excercise-data="item.sets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)"/>
-        
-        <div class="control-panel">
-            <RouterLink class="add-excercise button-style" :to="`/workout/${workoutId}/search`">+</RouterLink>
-            <div class="workout-stop-panel">
-                <div class="button-style" @click="cancelWorkout">x</div>
-                <div class="button-style" @click="finishWorkout">o</div>
+        <div class="exercise-box">
+            <Exercise class="exercise" v-for="(item, index) in workoutExercises" :id="index" :excercise-title="item.name" :excercise-data="item.sets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)" @remove-exercise="(v) => removeExercise(v)"/>
+            
+            <div class="control-panel">
+                <div class="add-excercise button-style" @click="openSearch">+</div>
+                <div class="workout-stop-panel">
+                    <div class="button-style" @click="cancelWorkout">x</div>
+                    <div class="button-style" @click="finishWorkout">o</div>
+                </div>
             </div>
         </div>
     </div>
@@ -248,11 +256,10 @@ const addSet = (item, warmUp) => {
 <style scoped>
 
 .container {
-    position: absolute;
-    top: 0;
-    left:0;
-    width: 100vw;
-    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .title {
@@ -272,11 +279,19 @@ const addSet = (item, warmUp) => {
     margin-bottom:  6rem;
 }
 
-.exc-container {
+.exercise-box {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 90px;
+    scrollbar-width: none;
+}
+
+.exercise {
     margin: 1rem 1rem 3rem 1rem;
 }
 
 .control-panel {
+    position: sticky;
     margin: 0 1rem;
     display: grid; 
     grid-template-rows: auto auto;
