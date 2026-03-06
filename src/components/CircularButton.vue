@@ -1,19 +1,14 @@
 <script setup>
-    import {computed, onMounted} from 'vue'
     import { imageFromSrc } from '../utils/conversion';
 
     const props = defineProps({
         icon: String,
         size: Number
     })
-
-    const clickFn = () => {
-        console.log(props.icon);
-    }
 </script>
 
 <template>
-    <div class="circle" @click="clickFn">
+    <div class="circle">
         <img :src='imageFromSrc(props.icon)' alt="">
     </div>
 </template>

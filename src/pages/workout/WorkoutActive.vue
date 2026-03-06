@@ -1,10 +1,11 @@
 <script setup>
 import Exercise from '../../components/Exercise.vue';
 
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database';
 import { isNumeric } from '../../utils/conversion';
+import EditableTextBox from '../../components/EditableTextBox.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -130,7 +131,7 @@ const storeTempWorkoutData = async () => {
 
     const res = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`)
     if (res.values[0].workoutExists === 1) {
-        await queryDatabase(`UPDATE currentWorkout SET 
+        const out = await queryDatabase(`UPDATE currentWorkout SET 
             timer='${timerVal.value}', 
             exercises='${JSON.stringify(exercises)}', 
             setsTotal='${JSON.stringify(setsTotal)}', 
@@ -159,6 +160,10 @@ onUnmounted(() => {
         clearInterval(intervalId);
     }
 });
+
+onBeforeRouteLeave(async () => {
+    await storeTempWorkoutData();
+})
 
 const finishWorkout = async () => {
     if (editMode.value) {
@@ -234,7 +239,8 @@ const removeExercise = (index) => {
 
 <template>
     <div class="container">
-        <p class="title">{{ workoutName }}</p>
+        <EditableTextBox v-if="editMode" class="title" v-model="workoutName"/>
+        <p v-if="!editMode" class="title">{{ workoutName }}</p>
         <p class="timer" v-if="!editMode">{{ timeString }}</p>
 
         <div class="space"></div>

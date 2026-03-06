@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, useTemplateRef } from 'vue'
+import { ref, onMounted, useTemplateRef, onUnmounted } from 'vue'
 import { createGesture } from '@ionic/vue'
 import { clamp } from '../utils/math'
 
@@ -13,6 +13,7 @@ const emit = defineEmits(['swipeLeft', 'swipeRight']);
 
 const swipeTranslate = ref(0);
 const containerHandle = useTemplateRef('container');
+let horizontalGesture = null;
 
 const horizontalSwipeMove = (e) => {
     swipeTranslate.value = clamp(e.deltaX, -props.maxDisplacement[1], props.maxDisplacement[0]);
@@ -29,16 +30,22 @@ const horizontalSwipeEnd = (e) => {
 };
 
 onMounted(() => {
-    const horizontalGesture = createGesture({
+    horizontalGesture = createGesture({
         el: containerHandle.value,
         threshold: 10,
         direction: 'x',
+        disableScroll: true,
+        gesturePriority: 10,
         gestureName: "horizontal-swipe-list-item",
         onMove: (e) => horizontalSwipeMove(e),
         onEnd: (e) => horizontalSwipeEnd(e)
     });
 
     horizontalGesture.enable(props.enableGesture);
+})
+
+onUnmounted(() => {
+    horizontalGesture.destroy();
 })
 
 </script>

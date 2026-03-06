@@ -6,7 +6,7 @@ const props = defineProps({
 })
 
 const setText = (e) => {
-    if (props.type.toLowerCase().trim() === 'number') {
+    if (props.type?.toLowerCase().trim() === 'number') {
         model.value = Number(e.target.innerText.trim());
     } else {
         model.value = e.target.innerText.trim();

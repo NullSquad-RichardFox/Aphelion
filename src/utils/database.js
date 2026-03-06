@@ -137,17 +137,15 @@ function closeDatabase() {
 }
 
 async function queryDatabase(querry, data) {
-    await db.open();
-    let out = [];
-
     try {
-        out = await db.query(querry , data);     
+        await db.open();
+        const res = await db.query(querry, data);     
+        await db.close();
+        return res;
     } catch (e) {
         console.error(e);
+        return [];
     }
-    
-    await db.close();
-    return out;
 }
 
 export {
