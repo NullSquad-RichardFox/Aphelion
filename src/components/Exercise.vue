@@ -1,33 +1,52 @@
 <script setup>
     import ListItem from './ListItem.vue';
-    import { onMounted, useTemplateRef, ref } from 'vue'
+    import EditableTextBox from './EditableTextBox.vue';
+    import { onMounted, useTemplateRef, ref, watch } from 'vue'
     import { createGesture } from '@ionic/vue';
+    import { clamp } from '../utils/math';
     
     const props = defineProps({
         excerciseTitle: String,
         excerciseData: Array,
-        editMode: Boolean
+        editMode: Boolean,
+        id: Number
     });
 
-    const emit = defineEmits(['addSet']);
+    const emit = defineEmits(['addSet', 'removeExercise']);
 
+    const lastWarmUpIndex = ref(-1);
     const titleTranslate = ref(0);
     const containerTranslate = ref(0);
     const titleHandle = useTemplateRef('titleRef');
     const containerHandle = useTemplateRef('setContainer');
 
-    const exerciseReps = ref(12);
-    const exerciseWeights = ref(0);
+    const titleSwipeMove = (e) => {
+        titleTranslate.value = clamp(e.deltaX, 0, 50);
+    }
+
+    const titleSwipeEnd = (e) => {
+        if (titleTranslate.value >= 50) {
+            emit('removeExercise', props.id)
+        }
+
+        titleTranslate.value = 0;
+    }
+
+    const containerSwipeMove = (e) => {
+        containerTranslate.value = clamp(e.deltaY, -40, 40);
+    };
+
+    const containerSwipeEnd = (e) => {
+        if (containerTranslate.value <= -34) {
+            emit('addSet', false);
+        } else if (containerTranslate.value >= 34) {
+            emit('addSet', true);
+        }
+
+        containerTranslate.value = 0;
+    };
 
     onMounted(() => {
-        const titleSwipeMove = (e) => {
-            titleTranslate.value = e.deltaX;
-        }
-
-        const titleSwipeEnd = (e) => {
-            titleTranslate.value = 0;
-        }
-
         const titleSwipe = createGesture({
             el: titleHandle.value,
             threshold: 10,
@@ -35,18 +54,7 @@
             gestureName: 'horizontal-swipe',
             onMove: (e) => titleSwipeMove(e),
             onEnd: (e) => titleSwipeEnd(e)
-        })
-
-        titleSwipe.enable(true);
-
-        const containerSwipeMove = (e) => {
-            containerTranslate.value = e.deltaY;
-            console.log(e.deltaY);
-        };
-
-        const containerSwipeEnd = (e) => {
-            containerTranslate.value = 0;
-        };
+        });
 
         const containerSwipe = createGesture({
             el: containerHandle.value,
@@ -56,13 +64,27 @@
             onMove: (e) => containerSwipeMove(e),
             onEnd: (e) => containerSwipeEnd(e)
         });
-
+        
+        titleSwipe.enable(true);
         containerSwipe.enable(true);
     });
+
+    watch(props.excerciseData, () => {
+        for (let i = 0; i < props.excerciseData.length; i++) {
+            if (!props.excerciseData[i].isWarmUp) {
+                lastWarmUpIndex.value = i - 1;
+                break;
+            }
+        }
+    })
 
     const itemClicked = (item) => {
         item.active = !item.active;
         // pr stuff
+    }
+
+    const deleteSet = (index) => {
+        props.excerciseData.splice(index, 1);
     }
 
 </script>
@@ -71,30 +93,36 @@
     <div class="frame">
         <div style="margin: 0.5rem;">
             <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excerciseTitle }}</p>
+            <div style="position: absolute; background: red; height: 25px; transform: translateY(-30px);" :style="{width:`${titleTranslate}px`}"></div>
         </div>
 
         <div class="header-decoration"></div>
 
         <div class="container" ref="setContainer">
             <ListItem 
-            class="set" 
             v-for="(item, index) in props.excerciseData" 
+            class="set" 
             :class="[{'glass': item.active},{'glass-accent': item.isPr}]" 
-            :enable-gesture="false" 
+            :enable-gesture="true" 
             :translation-y="containerTranslate" 
-            :max-displacement="40" 
-            left-icon="cardio.png" 
-            right-icon="cardio.png" 
+            :max-displacement="[40, 0]"
             @click="itemClicked(item)"
+            @swipe-right="deleteSet(index)"
             >
-                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ index + 1}}</p>
-                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}"><span role="textbox" contenteditable="true" @input="item.reps = $event.target.innerText.trim()">{{ item.reps }}</span> reps</p>
-                <p v-if="!props.editMode" class="item-text" :class="{'warm-up-text': item.isWarmUp}"><span role="textbox" contenteditable="true" @input="item.weight = $event.target.innerText.trim()">{{ item.weight }}</span>kg</p>
+                <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ item.isWarmUp ? index + 1 : index - lastWarmUpIndex }}</p>
+                <EditableTextBox class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-model="item.reps" :auxiliary-text="' reps'" type="number"/>
+                <EditableTextBox v-if="!editMode" class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-model="item.weight" :auxiliary-text="'kg'" type="number"/> 
             </ListItem>
-        </div>
 
-        <div class="container" v-if="props.excerciseData.length == 0">
-            <div @click="emit('addSet', false)">
+            <div v-if="containerTranslate <= -34" class="set phantom" :style="{'transform':'translateY(' + containerTranslate + 'px)'}">
+                <p>+</p>
+            </div>
+
+            <div v-if="containerTranslate >= 34" class="set phantom" style="top:0;">
+                <p>+</p>
+            </div>
+            
+            <div v-if="props.excerciseData.length == 0" @click="emit('addSet', false)">
                 <p class="item-text">+</p>
             </div>
         </div>
@@ -120,13 +148,20 @@
 }
 
 .container {
+    position: relative;
     margin: 0.5rem;
     margin-left: 1.5rem;
+    overflow: hidden;
 }
 
 .set {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.set:last-child {
+    margin-bottom: 0;
 }
 
 .item-text {
@@ -135,15 +170,30 @@
     border: none;
     background: none;
     color: #eee;
-    padding: 0.1rem;
+    text-align: center;
 }
 
-.item-text:focus {
-    outline: none;
+.item-text span {
+    padding: 0.25rem 0.05rem;
 }
 
 .warm-up-text {
     color: #5a5a5a !important;
+}
+
+.phantom {
+    position: absolute;
+    width: calc(100% - 0.5rem);
+    margin: 0.2rem;
+    border: none;
+    background: none;
+    justify-content: center;
+}
+
+.phantom p {
+    color: #eee;
+    font-size: 22px;
+    margin: 0;
 }
 
 @property --angle {

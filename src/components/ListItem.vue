@@ -1,38 +1,34 @@
 <script setup>
-import { ref, onMounted, useTemplateRef, computed } from 'vue'
+import { ref, onMounted, useTemplateRef } from 'vue'
 import { createGesture } from '@ionic/vue'
 import { clamp } from '../utils/math'
-import { imageFromSrc } from '../utils/conversion';
 
 const props = defineProps({
     enableGesture: Boolean,
-    tranlationY: Number,
-    maxDisplacement: Number,
-    leftIcon: String,
-    rightIcon: String
+    translationY: Number,
+    maxDisplacement: Array
 });
 
 const emit = defineEmits(['swipeLeft', 'swipeRight']);
 
-
 const swipeTranslate = ref(0);
 const containerHandle = useTemplateRef('container');
 
+const horizontalSwipeMove = (e) => {
+    swipeTranslate.value = clamp(e.deltaX, -props.maxDisplacement[1], props.maxDisplacement[0]);
+};
+
+const horizontalSwipeEnd = (e) => {
+    if (swipeTranslate.value == props.maxDisplacement[0]) {
+        emit('swipeRight');
+    } else if (swipeTranslate.value == -props.maxDisplacement[1]) {
+        emit('swipeLeft');
+    }
+    
+    swipeTranslate.value = 0;
+};
+
 onMounted(() => {
-    const horizontalSwipeMove = (e) => {
-        swipeTranslate.value = clamp(e.deltaX, -props.maxDisplacement, props.maxDisplacement);
-    };
-
-    const horizontalSwipeEnd = (e) => {
-        if (swipeTranslate.value == props.maxDisplacement) {
-            emit('swipeRight');
-        } else if (swipeTranslate.value == -props.maxDisplacement) {
-            emit('swipeLeft');
-        }
-        
-        swipeTranslate.value = 0;
-    };
-
     const horizontalGesture = createGesture({
         el: containerHandle.value,
         threshold: 10,
@@ -45,33 +41,24 @@ onMounted(() => {
     horizontalGesture.enable(props.enableGesture);
 })
 
-const hello = computed(() => {
-    return {transform:`translateY(${props.tranlationY}px)`}
-})
-
 </script>
 
 <template> 
 
-<div ref="container" :style="hello"> 
+<div ref="container" :style="{transform:`translate(${swipeTranslate}px, ${props.translationY}px)`}"> 
     <slot />
-        
-    <img :src="imageFromSrc(props.leftIcon)" style="left:0" v-if="swipeTranslate == props.maxDisplacement" alt="">
-    <img :src="imageFromSrc(props.rightIcon)" style="right:0" v-if="swipeTranslate == -props.maxDisplacement" alt="">
+    <div class="side-widget" :style="{width:`${swipeTranslate}px`, transform:`translateX(${-swipeTranslate}px)`}"></div>
+    <div class="side-widget" style="right: 0;" :style="{width:`${-swipeTranslate}px`, transform:`translateX(${-swipeTranslate}px)`}"></div>
 </div>
 
 </template>
 
 <style scoped>
 
-.icon {
+.side-widget {
     position: absolute;
-    height: 10px;
-}
-
-.icon img {
-    height: 10px;
-    width: 10px;
+    background: red;
+    height: 100%;
 }
 
 </style>
