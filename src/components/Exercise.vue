@@ -4,10 +4,10 @@
     import { onMounted, useTemplateRef, ref, watch } from 'vue'
     import { createGesture } from '@ionic/vue';
     import { clamp } from '../utils/math';
+import { queryDatabase } from '../utils/database';
     
     const props = defineProps({
-        excerciseTitle: String,
-        excerciseData: Array,
+        excercise: Object, // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
         editMode: Boolean,
         id: Number
     });
@@ -69,22 +69,43 @@
         containerSwipe.enable(true);
     });
 
-    watch(props.excerciseData, () => {
-        for (let i = 0; i < props.excerciseData.length; i++) {
-            if (!props.excerciseData[i].isWarmUp) {
+    watch(props.excercise?.sets, () => {
+        for (let i = 0; i < props.excercise.sets.length; i++) {
+            if (!props.excercise.sets[i].isWarmUp) {
                 lastWarmUpIndex.value = i - 1;
                 break;
             }
         }
     })
 
-    const itemClicked = (item) => {
-        item.active = !item.active;
-        // pr stuff
+    const itemClicked = async (item) => {
+        if (props.editMode) return;
+
+        if (!item.active) {
+            item.active = true;
+
+            // Check if PR
+            const res = (await queryDatabase(`SELECT * FROM exercises WHERE id=${props.excercise.id}`)).values[0];
+            const currentORM = item.weight * (1 + item.reps / 30); // epley formula for one rep max
+            let ormMax = res.personalBest;
+            const thisIndex = props.excercise.sets.indexOf(item);
+            for (let i = 0; i < thisIndex; i++) {
+                if (props.excercise.sets[i].active) {
+                    ormMax = Math.max(ormMax, props.excercise.sets[i].weight * (1 + props.excercise.sets[i].reps / 30));
+                }
+            }
+
+            if (currentORM > ormMax) {
+                item.isPr = true;
+            }
+        } else {
+            item.active = false;
+            item.isPr = false;
+        }
     }
 
     const deleteSet = (index) => {
-        props.excerciseData.splice(index, 1);
+        props.excercise.sets.splice(index, 1);
     }
 
 </script>
@@ -92,7 +113,7 @@
 <template>
     <div class="frame">
         <div style="margin: 0.5rem;">
-            <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excerciseTitle }}</p>
+            <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excercise.name }}</p>
             <div style="position: absolute; background: red; height: 25px; transform: translateY(-30px);" :style="{width:`${titleTranslate}px`}"></div>
         </div>
 
@@ -100,9 +121,9 @@
 
         <div class="container" ref="setContainer">
             <ListItem 
-            v-for="(item, index) in props.excerciseData" 
+            v-for="(item, index) in props.excercise.sets" 
             class="set" 
-            :class="[{'glass': item.active},{'glass-accent': item.isPr}]" 
+            :class="[{'glass': item.active && !item.isPr},{'glass-accent': item.isPr}]" 
             :enable-gesture="true" 
             :translation-y="containerTranslate" 
             :max-displacement="[40, 0]"
@@ -122,7 +143,7 @@
                 <p>+</p>
             </div>
             
-            <div v-if="props.excerciseData.length == 0" @click="emit('addSet', false)">
+            <div v-if="props.excercise.sets.length == 0" @click="emit('addSet', false)">
                 <p class="item-text">+</p>
             </div>
         </div>

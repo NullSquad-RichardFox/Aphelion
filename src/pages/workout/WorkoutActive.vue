@@ -148,15 +148,18 @@ const finishWorkout = async () => {
             let weights = [];
             let sets = [];
 
+            let orm = 0;
             for (const s of e.sets) {
                 if (s.active && !s.isWarmUp) {
                     weights.push(s.weight);
                     sets.push(s.reps);
+
+                    orm = Math.max(orm, s.weight * (1 + s.reps / 30));
                 }
             }
             
             data.push({workout: workoutId.value, date: Date.now(), weights: weights, sets: sets});
-            await queryDatabase(`UPDATE exercises SET data='${JSON.stringify(data)}' WHERE id=${e.id}`);
+            await queryDatabase(`UPDATE exercises SET data='${JSON.stringify(data)}', personalBest='${res.personalBest < orm ? orm : res.personalBest}' WHERE id=${e.id}`);
         }
     }
 
@@ -198,7 +201,7 @@ const removeExercise = (index) => {
         <div class="space"></div>
 
         <div class="exercise-box">
-            <Exercise class="exercise" v-for="(item, index) in workoutExercises" :id="index" :excercise-title="item.name" :excercise-data="item.sets" :edit-mode="editMode" @add-set="(v) => addSet(item, v)" @remove-exercise="(v) => removeExercise(v)"/>
+            <Exercise class="exercise" v-for="(item, index) in workoutExercises" :id="index" :excercise="item" :edit-mode="editMode" @add-set="(v) => addSet(item, v)" @remove-exercise="(v) => removeExercise(v)"/>
             
             <div class="control-panel">
                 <div class="add-excercise button-style" @click="openSearch">+</div>
