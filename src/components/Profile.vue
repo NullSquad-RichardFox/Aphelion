@@ -8,8 +8,8 @@ const router = useRouter();
 const profileDataCategories = ref([
     {ref: "", icon: ""}, 
     {ref: "", icon: "gym_progress.png"}, 
-    {ref: "", icon: "weight_progress.png"}, 
-    {ref: () => { router.push('/settings') }, icon: "settings.png"}
+    {ref: () => router.push('/gym-progress'), icon: "weight_progress.png"}, 
+    {ref: () => router.push('/settings'), icon: "settings.png"}
 ]);
 const profileExpanded = ref(false);
 

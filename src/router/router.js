@@ -6,6 +6,7 @@ import WorkoutActive from '../pages/workout/WorkoutActive.vue'
 import ExerciseCreator from '../pages/workout/ExcerciseCreator.vue'
 import ExerciseSearch from '../pages/workout/ExcerciseSearch.vue'
 import Settings from '../pages/Settings.vue'
+import GymProgress from '../pages/GymProgress.vue'
 
 
 const routes = [
@@ -14,7 +15,8 @@ const routes = [
     { path: '/workout/:id', component: WorkoutActive },
     { path: '/workout/:id/search', component: ExerciseSearch },    
     { path: '/workout/:id/creator', component: ExerciseCreator },
-    { path: '/settings', component: Settings}
+    { path: '/settings', component: Settings},
+    { path: '/gym-progress', component: GymProgress}
 ]
 
 const router = createRouter({
