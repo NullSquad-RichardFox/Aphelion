@@ -36,11 +36,7 @@ async function createDatabase() {
             name TEXT,
             timer INTEGER,
             editMode BOOLEAN,
-            exercises TEXT,
-            setsTotal TEXT,
-            setsWorked TEXT,
-            weights TEXT,
-            reps TEXT
+            exercises TEXT
             )`);
 
         await populateDatabase();   
@@ -149,5 +145,5 @@ async function queryDatabase(querry, data) {
 }
 
 export {
-    loadDatabase, closeDatabase, queryDatabase
+    loadDatabase, closeDatabase, queryDatabase, dropDatabase, createDatabase
 }

@@ -35,31 +35,10 @@ const retrieveStoredWorkout = async () => {
     workoutName.value = current.name;
     timerVal.value = current.timer;
     editMode.value = history.state.editMode === undefined ? Boolean(current.editMode) : history.state.editMode;
-
-    // set workoutExercises 
-    const dataExercises = JSON.parse(current.exercises);
-    const dataTotal = JSON.parse(current.setsTotal);
-    const dataWorked = JSON.parse(current.setsWorked);
-    const dataWeights = JSON.parse(current.weights);
-    const dataReps = JSON.parse(current.reps);
-    const exercises = (await queryDatabase(`SELECT * FROM exercises WHERE id IN (${dataExercises})`)).values;
-
-    let currentSet = 0;
-    for (let i = 0; i < dataTotal.length; i++) {
-        const ex = exercises.find((v) => v.id === dataExercises[i]);
-        let loadedSets = []
-        for (let j = 0; j < dataTotal[i]; j++) {
-            loadedSets.push({reps: dataReps[currentSet], weight: dataWeights[currentSet], active: j < dataWorked[i], isPr: false, isWarmUp: false});
-            currentSet++;
-        } 
-        workoutExercises.value.push({id: ex.id, name: ex.name, sets: loadedSets})
-    }
+    workoutExercises.value = JSON.parse(current.exercises);
 }
 
 const createWorkout = async () => {
-    let exercises = [];
-    let sets = [];
-
     if (!isNumeric(workoutId.value)) {
         // new workout
         workoutName.value = workoutId.value;
@@ -69,8 +48,8 @@ const createWorkout = async () => {
         const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${workoutId.value}`);
         const workout = res.values[0];
         workoutName.value = workout.name;
-        sets = JSON.parse(workout.sets);
-        exercises = JSON.parse(workout.exercises);
+        const sets = JSON.parse(workout.sets);
+        const exercises = JSON.parse(workout.exercises);
         editMode.value = history.state.editMode;
 
         const exerciseData = (await queryDatabase(`SELECT * FROM exercises WHERE id IN (${exercises})`)).values;
@@ -85,16 +64,12 @@ const createWorkout = async () => {
         }
     }
 
-    await queryDatabase(`INSERT INTO currentWorkout (id, name, timer, editMode, exercises, setsTotal, setsWorked, weights, reps) VALUES (?,?,?,?,?,?,?,?,?)`, [
+    await queryDatabase(`INSERT INTO currentWorkout (id, name, timer, editMode, exercises) VALUES (?,?,?,?,?)`, [
         isNumeric(workoutId.value) ? workoutId.value : -1,
         workoutName.value,
         timerVal.value,
         Number(editMode.value),
-        JSON.stringify(exercises),
-        JSON.stringify(sets),
-        JSON.stringify([]),
-        JSON.stringify([]),
-        JSON.stringify([])
+        JSON.stringify(workoutExercises.value)
     ]);
 }
 
@@ -110,34 +85,11 @@ const loadWorkoutData = async () => {
 }
 
 const storeTempWorkoutData = async () => {
-    let exercises = [];
-    let setsTotal = [];
-    let setsActive = [];
-    let weights = [];
-    let reps = [];
-    for (const e of workoutExercises.value) {
-        exercises.push(e.id);
-        setsTotal.push(e.sets == undefined ? 0 : e.sets.length);
-
-        let active = 0;
-        for (const s of e.sets) {
-            weights.push(s.weight);
-            reps.push(s.reps)
-            if (s.active) active++;
-        }
-
-        setsActive.push(active);
-    }
-
     const res = await queryDatabase(`SELECT EXISTS(SELECT 1 FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}) AS workoutExists;`)
     if (res.values[0].workoutExists === 1) {
-        const out = await queryDatabase(`UPDATE currentWorkout SET 
+        await queryDatabase(`UPDATE currentWorkout SET 
             timer='${timerVal.value}', 
-            exercises='${JSON.stringify(exercises)}', 
-            setsTotal='${JSON.stringify(setsTotal)}', 
-            setsWorked='${JSON.stringify(setsActive)}', 
-            weights='${JSON.stringify(weights)}', 
-            reps='${JSON.stringify(reps)}'
+            exercises='${JSON.stringify(workoutExercises.value)}'
         WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`);
     }
 }
