@@ -13,13 +13,18 @@ const profileDataCategories = ref([
 ]);
 const profileExpanded = ref(false);
 
+const handleClick = (fun) => {
+    profileExpanded.value = false;
+    fun();
+}
+
 </script>
 
 <template>
     <div class="profile">
         <CircularButton :size="50" icon="user.png" @click="profileExpanded = !profileExpanded"/>
         <div :class="['profile-button', {'button-enabled': profileExpanded}]" v-for="item in profileDataCategories">
-            <CircularButton :size="40" :icon="item.icon" @click="item.ref"/>
+            <CircularButton :size="40" :icon="item.icon" @click="handleClick(item.ref)"/>
         </div>
     </div>
 </template>
