@@ -22,12 +22,12 @@ const dietClick = () => {
 };
 
 onMounted(() => {
-    if (route.path == '/workout') {
+    if (route.path.includes('workout')) {
         activeId.value = 0;
-    } else if (route.path == '/') {
-        activeId.value = 1;
-    } else if (route.path == '/diet') {
+    } else if (route.path.includes('diet')) {
         activeId.value = 2;
+    } else {
+        activeId.value = 1;
     }
 });
 
