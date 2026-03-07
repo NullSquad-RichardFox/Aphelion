@@ -1,21 +1,27 @@
 <script setup>
 import Exercise from '../../components/Exercise.vue';
-import { Icon } from '@iconify/vue';
+import EditableTextBox from '../../components/EditableTextBox.vue';
+import ControlPanel from '../../components/Control Panel.vue';
+import ExerciseHistory from '../../components/ExerciseHistory.vue';
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database';
 import { isNumeric } from '../../utils/conversion';
-import EditableTextBox from '../../components/EditableTextBox.vue';
 
 const route = useRoute();
 const router = useRouter();
 
+// Exercise data
 let intervalId = null;
 const timerVal = ref(0);
 const editMode = ref(true);
 const workoutId = ref(route.params.id);
 const workoutName = ref('');
 const workoutExercises = ref([]); // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
+
+// Exercise history
+const showHistory = ref(false);
+const showHistoryExerciseID = ref(0);
 
 const timeString = computed(() => {
     const hours = Math.floor(timerVal.value / 3600);
@@ -40,13 +46,12 @@ const retrieveStoredWorkout = async () => {
 
 const createWorkout = async () => {
     if (!isNumeric(workoutId.value)) {
-        // new workout
+        // Create new workout from scratch
         workoutName.value = workoutId.value;
         editMode.value = true;
     } else {            
-        // old workout
-        const res = await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${workoutId.value}`);
-        const workout = res.values[0];
+        // Create new from template
+        const workout = (await queryDatabase(`SELECT * FROM workoutTemplates WHERE id=${workoutId.value}`)).values[0];
         workoutName.value = workout.name;
         const sets = JSON.parse(workout.sets);
         const exercises = JSON.parse(workout.exercises);
@@ -94,29 +99,6 @@ const storeTempWorkoutData = async () => {
     }
 }
 
-onMounted(() => {
-    loadWorkoutData().then(() => {
-        if (!editMode.value) {
-            intervalId = setInterval(() => {
-                timerVal.value++;
-            }, 1000);
-        }
-
-        if (history.state.exercise != undefined) addExercise(history.state.exercise);
-
-    });
-});
-
-onUnmounted(() => {
-    if (intervalId != null ) {
-        clearInterval(intervalId);
-    }
-});
-
-onBeforeRouteLeave(async () => {
-    await storeTempWorkoutData();
-})
-
 const finishWorkout = async () => {
     if (editMode.value) {
         let exs = [];
@@ -146,19 +128,19 @@ const finishWorkout = async () => {
             const res = (await queryDatabase(`SELECT * FROM exercises WHERE id=${e.id}`)).values[0];
             let data = JSON.parse(res.data);
             let weights = [];
-            let sets = [];
+            let reps = [];
 
             let orm = 0;
             for (const s of e.sets) {
                 if (s.active && !s.isWarmUp) {
                     weights.push(s.weight);
-                    sets.push(s.reps);
+                    reps.push(s.reps);
 
                     orm = Math.max(orm, s.weight * (1 + s.reps / 30));
                 }
             }
             
-            data.push({workout: workoutId.value, date: Date.now(), weights: weights, sets: sets});
+            data.push({workout: workoutId.value, date: new Date(), weights: weights, reps: reps});
             await queryDatabase(`UPDATE exercises SET data='${JSON.stringify(data)}', personalBest='${res.personalBest < orm ? orm : res.personalBest}' WHERE id=${e.id}`);
         }
     }
@@ -166,6 +148,30 @@ const finishWorkout = async () => {
     await queryDatabase(`DELETE FROM currentWorkout`);
     await router.push('/workout');
 }
+
+onMounted(async () => {
+    await loadWorkoutData();
+    
+    if (!editMode.value) {
+        intervalId = setInterval(() => {
+            timerVal.value++;
+        }, 1000);
+    }
+
+    if (history.state.exercise != undefined) {
+        await addExercise(history.state.exercise);
+    }
+});
+
+onUnmounted(() => {
+    if (intervalId != null ) {
+        clearInterval(intervalId);
+    }
+});
+
+onBeforeRouteLeave(async () => {
+    await storeTempWorkoutData();
+})
 
 const cancelWorkout = async () => {
     await queryDatabase(`DELETE FROM currentWorkout`);
@@ -176,15 +182,6 @@ const openSearch = async () => {
     await storeTempWorkoutData();
     await router.push(`/workout/${workoutId.value}/search`);
 }
-
-const addSet = (item, warmUp) => {    
-    if (warmUp) {
-        item.sets.unshift({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: true})
-    } else {
-        item.sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false})
-    }
-
-};
 
 const removeExercise = (index) => {
     workoutExercises.value.splice(index, 1);
@@ -200,23 +197,13 @@ const removeExercise = (index) => {
 
         <div class="space"></div>
 
-        <div class="exercise-box">
-            <Exercise class="exercise" v-for="(item, index) in workoutExercises" :id="index" :excercise="item" :edit-mode="editMode" @add-set="(v) => addSet(item, v)" @remove-exercise="(v) => removeExercise(v)"/>
+        <div class="exercise-container">
+            <Exercise class="exercise" v-for="(item, index) in workoutExercises" :id="index" :excercise="item" :edit-mode="editMode" @remove-exercise="(id) => removeExercise(id)" @show-history="(id) => {showHistory = true; showHistoryExerciseID = id}"/>
             
-            <div class="control-panel">
-                <div class="add-excercise button-style" @click="openSearch">
-                    <Icon icon="tabler:plus" color="#eee" width="25"/>
-                </div>
-                <div class="workout-stop-panel">
-                    <div class="button-style" @click="cancelWorkout">
-                        <Icon icon="tabler:letter-x" color="#eee" width="25"/>
-                    </div>
-                    <div class="button-style" @click="finishWorkout">
-                        <Icon icon="tabler:check" color="#eee" width="25"/>
-                    </div>
-                </div>
-            </div>
+            <ControlPanel :expanded="true" margin="0 1rem" :icons="['tabler:plus', 'tabler:letter-x', 'tabler:check']" :callbacks="[openSearch, cancelWorkout, finishWorkout]"/>
         </div>
+
+        <ExerciseHistory class="exercise-history" :id="showHistoryExerciseID" v-model="showHistory"/>
     </div>
 </template>
 
@@ -246,10 +233,10 @@ const removeExercise = (index) => {
     margin-bottom:  6rem;
 }
 
-.exercise-box {
+.exercise-container {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 90px;
+    padding-bottom: 100px;
     scrollbar-width: none;
 }
 
@@ -257,30 +244,11 @@ const removeExercise = (index) => {
     margin: 1rem 1rem 3rem 1rem;
 }
 
-.control-panel {
-    position: sticky;
-    margin: 0 1rem;
-    display: grid; 
-    grid-template-rows: auto auto;
-    gap: 0.5rem;
-}
-
-.workout-stop-panel {
-    display: grid; 
-    grid-template-columns: auto auto;
-    gap: 0.5rem;
-}
-
-.button-style {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background-color: rgba(225, 225, 225, 0.071);
-    border-radius: 2px;
-    border: 1px #eee solid;
-
-    padding: 0.2rem 0;
+.exercise-history {
+    position: absolute; 
+    top: 8rem; 
+    left: 10%; 
+    width: 80%;
 }
 
 </style>

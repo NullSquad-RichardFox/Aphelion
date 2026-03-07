@@ -66,12 +66,13 @@ onMounted(() => {
 }
 
 .close-button {
-    margin: 0.5rem;
+    margin: 3.5rem 0.5rem 0.5rem 0.5rem;
     font-size: 40px;
 }
 
 .list {
     position: relative;
+    scrollbar-width: none;
 }
 
 </style> 

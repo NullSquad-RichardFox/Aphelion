@@ -13,7 +13,7 @@
         id: Number
     });
 
-    const emit = defineEmits(['addSet', 'removeExercise']);
+    const emit = defineEmits(['showHistory', 'removeExercise']);
 
     const lastWarmUpIndex = ref(-1);
     const titleTranslate = ref(0);
@@ -22,12 +22,14 @@
     const containerHandle = useTemplateRef('setContainer');
 
     const titleSwipeMove = (e) => {
-        titleTranslate.value = clamp(e.deltaX, 0, 40);
+        titleTranslate.value = clamp(e.deltaX, -40, 40);
     }
 
     const titleSwipeEnd = (e) => {
         if (titleTranslate.value >= 40) {
             emit('removeExercise', props.id)
+        } else if (titleTranslate.value <= -40) {
+            emit('showHistory', props.excercise.id)
         }
 
         titleTranslate.value = 0;
@@ -39,9 +41,9 @@
 
     const containerSwipeEnd = (e) => {
         if (containerTranslate.value <= -34) {
-            emit('addSet', false);
+            addSet(false);
         } else if (containerTranslate.value >= 34) {
-            emit('addSet', true);
+            addSet(true);
         }
 
         containerTranslate.value = 0;
@@ -105,6 +107,14 @@
         }
     }
 
+    const addSet = (warmUp) => {
+        if (warmUp) {
+            props.excercise.sets.unshift({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: true})
+        } else {
+            props.excercise.sets.push({reps: 12, weight: 0, active: false, isPr: false, isWarmUp: false})
+        }
+    }
+
     const deleteSet = (index) => {
         props.excercise.sets.splice(index, 1);
     }
@@ -116,6 +126,7 @@
         <div style="margin: 0.5rem;">
             <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excercise.name }}</p>
             <Icon v-if="titleTranslate >= 35" icon="tabler:trash" style="position: absolute; transform: translate(5px, -30px);" height="25" width="25"/>
+            <Icon v-if="titleTranslate <= -35" icon="tabler:calendar-week" style="position: absolute; transform: translate(-30px, -30px); right: 0;" height="25" width="25"/>
         </div>
 
         <div class="header-decoration"></div>
@@ -145,7 +156,7 @@
                 <Icon icon="tabler:circle-dashed-plus" width="25" height="25" />
             </div>
             
-            <div v-if="props.excercise.sets.length == 0" style="display: flex; justify-content: center; align-items: center;" @click="emit('addSet', false)">
+            <div v-if="props.excercise.sets.length == 0" style="display: flex; justify-content: center; align-items: center;" @click="addSet(false)">
                 <Icon icon="tabler:circle-plus" width="25" height="25" />
             </div>
         </div>

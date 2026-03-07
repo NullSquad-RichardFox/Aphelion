@@ -1,5 +1,5 @@
 <script setup>
-import { Icon } from '@iconify/vue';
+import ControlPanel from '../../components/Control Panel.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database';
@@ -60,48 +60,39 @@ const goBack = () => {
             <p>{{ item.name }}</p>
         </div>
     </div>
-    <div class="control-panel">
-        <div class="button-style" @click="goBack">
-            <Icon icon="tabler:letter-x" color="#eee" width="25"/>
-        </div>
-        <div class="button-style" @click="createExcercise">
-            <Icon icon="tabler:check" color="#eee" width="25"/>
-        </div>
-    </div>
+
+    <ControlPanel :expanded="false" margin="0.5rem 10%" :icons="['tabler:letter-x', 'tabler:check']" :callbacks="[goBack, createExcercise]" />
 </div>
 
 </template>
 
 <style scoped>
-
-
-
 .container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    inset: 0;
     background-color: #1b1b1b;
 }
 
 .search-bar {
     display: block;
     width: 20rem;
-    margin: 5rem auto 0 auto;
     background: none;
-    border: 1px solid #eee;
+
     padding: 0.1rem;
+    margin: 5rem auto 0 auto;
+    
     border-radius: 4px;
-    color: #eee;
+    border: 1px solid #eee;
+    
     font-size: 20px;
+    color: #eee;
 }
 
 .menu {
-    margin: 0.5rem 0 0 10%;
-    width: 80%;
     display: grid;
+    width: 80%;
     gap: 0.6rem;
+    margin: 0.5rem 0 0 10%;
 }
 
 .item {
@@ -115,25 +106,6 @@ const goBack = () => {
     margin:0;
     text-align: center;
     font-size: 18px;
-}
-
-.control-panel {
-    display: grid;
-    grid-template-columns: auto auto;
-    margin: 0.8rem 10% 0.5rem 10%;
-    gap: 0.5rem;
-}
-
-.button-style {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background-color: rgba(225, 225, 225, 0.071);
-    border-radius: 2px;
-    border: 1px #eee solid;
-
-    padding: 0.2rem 0;
 }
 
 .primary {

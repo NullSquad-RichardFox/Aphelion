@@ -1,5 +1,6 @@
 <script setup>
 import ListItem from '../../components/ListItem.vue';
+import ControlPanel from '../../components/Control Panel.vue';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { onMounted, ref, useTemplateRef } from 'vue';
@@ -103,11 +104,8 @@ const editWorkout = (id) => {
     </div>
 
     <div class="create-workout-window" v-if="openNewWorkout">
-        <input type="text" v-model="workoutName" placeholder="Workout Title" class="workout-name-input">
-        <div class="confirm-panel">
-            <div class="button-style" @click="openNewWorkout = false">x</div>
-            <div class="button-style" @click="createWorkout">o</div>
-        </div>
+        <input type="text" v-model="workoutName" placeholder="Workout Name" class="workout-name-input">
+        <ControlPanel :expanded="false" margin="0 0.75rem 0.5rem 0.75rem" :icons="['tabler:letter-x', 'tabler:check']" :callbacks="[() => {openNewWorkout = false}, createWorkout]" />
     </div>
 </div>
 </template>
@@ -115,10 +113,8 @@ const editWorkout = (id) => {
 <style scoped>
 
 .container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
+    position: fixed;
+    inset: 0;
 }
 
 .title {
@@ -137,9 +133,11 @@ const editWorkout = (id) => {
     display: grid;
     align-items: center;
     text-align: center;
-    margin: 0 1rem;
-    background-color: #8e8e8e11;
     height: 80px;
+    background-color: #8e8e8e11;
+    
+    margin: 0 1rem;
+
     border: 2px #eee solid;
     border-radius: 2px;
 }
@@ -151,25 +149,29 @@ const editWorkout = (id) => {
 
 .all-workouts {
     position: relative;
-    margin: 0 1rem;
-    background-color: #8e8e8e11;
-    border-radius: 2px;
-    padding: 0.2rem;
-
     height: auto;
     max-height: 420px;
+    
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: none;
+    
+    margin: 0 1rem;
+    padding: 0.2rem;
+    
+    border-radius: 2px;
+    background-color: #8e8e8e11;
 }
 
 .workout-item {
     display: flex;
     justify-content: space-between;
+    height: 3rem;
+
+    margin: 0.8rem 0.5rem;
+
     background-color: #80808029;
     border-radius: 4px;
-    margin: 0.8rem 0.5rem;
-    height: 3rem;
 }
 
 .workout-item p {
@@ -178,20 +180,15 @@ const editWorkout = (id) => {
 }
 
 .add-workout {
-    position: absolute;
-    height: 3rem;
-    width: calc(100% - 1.4rem);
     display: flex;
     justify-content: space-between;
-    
-    border-radius: 4px;
-    margin: -0.2rem 0.5rem 0.8rem 0.5rem;
-}
+    height: 3rem;
 
-.workout-edit {
-    margin: 0.2rem;
-    height: calc(100% - 0.4rem);
-    filter: invert(99%) sepia(6%) saturate(25%) hue-rotate(239deg) brightness(109%) contrast(87%);
+    border-radius: 4px;
+
+    margin: -0.2rem 0.5rem 0.8rem 0.5rem;
+    position: absolute;
+    width: calc(100% - 1.4rem);
 }
 
 .centered {
@@ -211,30 +208,16 @@ const editWorkout = (id) => {
 .workout-name-input {
     display: block;
     width: calc(100% - 1.5rem);
-    margin: 0.8rem auto 0.5rem auto;
     background: none;
-    border: 1px solid #eee;
+
+    margin: 0.8rem auto 0.5rem auto;
     padding: 0.1rem;
+    
+    border: 1px solid #eee;
     border-radius: 4px;
+    
     color: #eee;
     font-size: 20px;
-}
-
-.confirm-panel {
-    margin: 0 0.75rem 0.5rem 0.75rem;
-    display: grid; 
-    grid-template-columns: auto auto;
-    gap: 0.5rem;
-}
-
-.button-style {
-    background-color: rgba(225, 225, 225, 0.071);
-    border-radius: 2px;
-    border: 1px #eee solid;
-    text-align: center;
-    text-decoration: none;
-    color: #eee;
-    font-size: 24px;
 }
 
 </style>

@@ -1,10 +1,9 @@
 <script setup>
-import { Icon } from '@iconify/vue';
+import ScrollBox from '../../components/ScrollBox.vue';
+import ControlPanel from '../../components/Control Panel.vue';
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database'
-
-import ScrollBox from '../../components/ScrollBox.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -25,10 +24,9 @@ const exercisePicked = (id) => {
     router.push({ path: `/workout/${route.params.id}`, state: { exercise: id }});
 }
 
-onMounted(() => {
-    queryDatabase(`SELECT * FROM exercises`).then((res) => {      
-        allExcercises.value = res.values;
-    });
+onMounted(async () => {
+    const res = await queryDatabase(`SELECT * FROM exercises`)
+    allExcercises.value = res.values;
 });
 
 </script>
@@ -42,39 +40,32 @@ onMounted(() => {
                 <p class="item-text" @click="exercisePicked(item.id)">{{ item.name }}</p>
             </template>
         </ScrollBox>
-        
-        <div class="control-panel">
-            <div class="button-style" @click="goBack">
-                <Icon icon="tabler:letter-x" color="#eee" width="25"/>
-            </div>
-            <div class="button-style" @click="router.push(`/workout/${route.params.id}/creator`)">
-                <Icon icon="tabler:plus" color="#eee" width="25"/>
-            </div>
-        </div>
+
+        <ControlPanel :expanded="false" margin="0.5rem 10%" :icons="['tabler:letter-x', 'tabler:plus']" :callbacks="[goBack, () => router.push(`/workout/${route.params.id}/creator`)]" />
     </div>    
 </template>
 
 <style scoped>
 
 .container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    position: fixed;
+    inset: 0;
     background-color: #1b1b1b;
 }
 
 .search-bar {
     display: block;
     width: 20rem;
-    margin: 5rem auto 0 auto;
     background: none;
-    border: 1px solid #eee;
+
     padding: 0.1rem;
+    margin: 5rem auto 0 auto;
+    
     border-radius: 4px;
-    color: #eee;
+    border: 1px solid #eee;
+    
     font-size: 20px;
+    color: #eee;
 }
 
 .results {
@@ -96,25 +87,6 @@ onMounted(() => {
     margin: 0 0.5rem; 
     line-height: 40px;
     font-size: 18px;
-}
-
-.control-panel {
-    display: grid;
-    grid-template-columns: auto auto;
-    margin: 0.5rem 10%;
-    gap: 0.5rem;
-}
-
-.button-style {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background-color: rgba(225, 225, 225, 0.071);
-    border-radius: 2px;
-    border: 1px #eee solid;
-
-    padding: 0.2rem 0;
 }
 
 </style>
