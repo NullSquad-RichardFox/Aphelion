@@ -1,4 +1,5 @@
 <script setup>
+import { Icon } from '@iconify/vue';
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database'
@@ -43,8 +44,12 @@ onMounted(() => {
         </ScrollBox>
         
         <div class="control-panel">
-            <div class="button-style" @click="goBack">x</div>
-            <RouterLink class="button-style" :to="`/workout/${route.params.id}/creator`">+</RouterLink>
+            <div class="button-style" @click="goBack">
+                <Icon icon="tabler:letter-x" color="#eee" width="25"/>
+            </div>
+            <div class="button-style" @click="router.push(`/workout/${route.params.id}/creator`)">
+                <Icon icon="tabler:plus" color="#eee" width="25"/>
+            </div>
         </div>
     </div>    
 </template>
@@ -101,13 +106,15 @@ onMounted(() => {
 }
 
 .button-style {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
     border: 1px #eee solid;
-    text-align: center;
-    text-decoration: none;
-    color: #eee;
-    font-size: 24px;
+
+    padding: 0.2rem 0;
 }
 
 </style>

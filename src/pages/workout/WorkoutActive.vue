@@ -1,6 +1,6 @@
 <script setup>
 import Exercise from '../../components/Exercise.vue';
-
+import { Icon } from '@iconify/vue';
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database';
@@ -204,10 +204,16 @@ const removeExercise = (index) => {
             <Exercise class="exercise" v-for="(item, index) in workoutExercises" :id="index" :excercise="item" :edit-mode="editMode" @add-set="(v) => addSet(item, v)" @remove-exercise="(v) => removeExercise(v)"/>
             
             <div class="control-panel">
-                <div class="add-excercise button-style" @click="openSearch">+</div>
+                <div class="add-excercise button-style" @click="openSearch">
+                    <Icon icon="tabler:plus" color="#eee" width="25"/>
+                </div>
                 <div class="workout-stop-panel">
-                    <div class="button-style" @click="cancelWorkout">x</div>
-                    <div class="button-style" @click="finishWorkout">o</div>
+                    <div class="button-style" @click="cancelWorkout">
+                        <Icon icon="tabler:letter-x" color="#eee" width="25"/>
+                    </div>
+                    <div class="button-style" @click="finishWorkout">
+                        <Icon icon="tabler:check" color="#eee" width="25"/>
+                    </div>
                 </div>
             </div>
         </div>
@@ -266,13 +272,15 @@ const removeExercise = (index) => {
 }
 
 .button-style {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
     border: 1px #eee solid;
-    text-align: center;
-    text-decoration: none;
-    color: #eee;
-    font-size: 24px;
+
+    padding: 0.2rem 0;
 }
 
 </style>

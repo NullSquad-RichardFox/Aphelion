@@ -1,10 +1,11 @@
 <script setup>
     import ListItem from './ListItem.vue';
     import EditableTextBox from './EditableTextBox.vue';
+    import { Icon } from '@iconify/vue';
     import { onMounted, useTemplateRef, ref, watch } from 'vue'
     import { createGesture } from '@ionic/vue';
     import { clamp } from '../utils/math';
-import { queryDatabase } from '../utils/database';
+    import { queryDatabase } from '../utils/database';
     
     const props = defineProps({
         excercise: Object, // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
@@ -21,11 +22,11 @@ import { queryDatabase } from '../utils/database';
     const containerHandle = useTemplateRef('setContainer');
 
     const titleSwipeMove = (e) => {
-        titleTranslate.value = clamp(e.deltaX, 0, 50);
+        titleTranslate.value = clamp(e.deltaX, 0, 40);
     }
 
     const titleSwipeEnd = (e) => {
-        if (titleTranslate.value >= 50) {
+        if (titleTranslate.value >= 40) {
             emit('removeExercise', props.id)
         }
 
@@ -114,7 +115,7 @@ import { queryDatabase } from '../utils/database';
     <div class="frame">
         <div style="margin: 0.5rem;">
             <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excercise.name }}</p>
-            <div style="position: absolute; background: red; height: 25px; transform: translateY(-30px);" :style="{width:`${titleTranslate}px`}"></div>
+            <Icon v-if="titleTranslate >= 35" icon="tabler:trash" style="position: absolute; transform: translate(5px, -30px);" height="25" width="25"/>
         </div>
 
         <div class="header-decoration"></div>
@@ -127,6 +128,7 @@ import { queryDatabase } from '../utils/database';
             :enable-gesture="true" 
             :translation-y="containerTranslate" 
             :max-displacement="[40, 0]"
+            :icons="['tabler:trash', '']"
             @click="itemClicked(item)"
             @swipe-right="deleteSet(index)"
             >
@@ -136,15 +138,15 @@ import { queryDatabase } from '../utils/database';
             </ListItem>
 
             <div v-if="containerTranslate <= -34" class="set phantom" :style="{'transform':'translateY(' + containerTranslate + 'px)'}">
-                <p>+</p>
+                <Icon icon="tabler:circle-plus" width="25" height="25" />
             </div>
 
             <div v-if="containerTranslate >= 34" class="set phantom" style="top:0;">
-                <p>+</p>
+                <Icon icon="tabler:circle-dashed-plus" width="25" height="25" />
             </div>
             
-            <div v-if="props.excercise.sets.length == 0" @click="emit('addSet', false)">
-                <p class="item-text">+</p>
+            <div v-if="props.excercise.sets.length == 0" style="display: flex; justify-content: center; align-items: center;" @click="emit('addSet', false)">
+                <Icon icon="tabler:circle-plus" width="25" height="25" />
             </div>
         </div>
     </div>

@@ -1,5 +1,5 @@
 <script setup>
-
+import { Icon } from '@iconify/vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { queryDatabase } from '../../utils/database';
@@ -61,8 +61,12 @@ const goBack = () => {
         </div>
     </div>
     <div class="control-panel">
-        <div class="button-style active" @click="goBack">x</div>
-        <div class="button-style active" @click="createExcercise">o</div>
+        <div class="button-style" @click="goBack">
+            <Icon icon="tabler:letter-x" color="#eee" width="25"/>
+        </div>
+        <div class="button-style" @click="createExcercise">
+            <Icon icon="tabler:check" color="#eee" width="25"/>
+        </div>
     </div>
 </div>
 
@@ -121,13 +125,15 @@ const goBack = () => {
 }
 
 .button-style {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     background-color: rgba(225, 225, 225, 0.071);
     border-radius: 2px;
     border: 1px #eee solid;
-    text-align: center;
-    text-decoration: none;
-    color: #eee;
-    font-size: 24px;
+
+    padding: 0.2rem 0;
 }
 
 .primary {

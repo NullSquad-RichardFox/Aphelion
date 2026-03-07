@@ -1,28 +1,25 @@
 <script setup>
-    import { imageFromSrc } from '../utils/conversion';
-
+    import { Icon } from '@iconify/vue';
+    
     const props = defineProps({
-        icon: String,
+        icon: { type: String, default: 'tabler:error-404' },
         size: Number
     })
 </script>
 
 <template>
-    <div class="circle">
-        <img :src='imageFromSrc(props.icon)' alt="">
+    <div class="circle" :style="{width: `${props.size}px`, height: `${props.size}px`}">
+        <Icon :icon="props.icon" :width="props.size - 5" :height="props.size - 5" color="#eee" style="margin: 0;"/>
     </div>
 </template>
 
 <style scoped>
 .circle {
-    width: v-bind(size+"px");
-    height: v-bind(size+"px");
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
     border-radius: 50%;
-    background-color: white;
-}
-
-.circle img {
-    width: v-bind(size+'px');
-    aspect-ratio: 1;
+    border: 3px solid #eee;
 }
 </style>

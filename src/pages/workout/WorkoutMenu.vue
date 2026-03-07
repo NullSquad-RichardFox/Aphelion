@@ -1,6 +1,6 @@
 <script setup>
 import ListItem from '../../components/ListItem.vue';
-
+import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
 import { onMounted, ref, useTemplateRef } from 'vue';
 import { createGesture } from '@ionic/vue';
@@ -88,16 +88,16 @@ const editWorkout = (id) => {
     <div>
         <p class="section-title">My Workouts</p>
         <div class="all-workouts" ref="allWorkoutsRef">
-            <ListItem class="workout-item" v-for="item in userWorkouts" @click="workoutPicked(item.id)" :translation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="[50,50]" @swipe-right="removeWorkout(item)" @swipe-left="editWorkout(item.id)">
+            <ListItem class="workout-item" v-for="item in userWorkouts" @click="workoutPicked(item.id)" :translation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="[50,50]" :icons="['tabler:trash', 'tabler:pencil']" @swipe-right="removeWorkout(item)" @swipe-left="editWorkout(item.id)">
                 <p>{{ item.name }}</p>
             </ListItem>
 
             <div v-if="userWorkouts.length === 0" class="workout-item centered" @click="openNewWorkout = true">
-                <p>+</p>
+                <Icon icon="tabler:circle-plus" width="35" color="#eee"/>
             </div>
 
-            <div v-if="allWorkoutsTranslation <= -42" class="workout-item phantom centered" :style="{'transform':'translateY(' + allWorkoutsTranslation + 'px)'}">
-                <p>+</p>
+            <div v-if="allWorkoutsTranslation <= -42" class="add-workout centered" :style="{'transform':'translateY(' + allWorkoutsTranslation + 'px)'}">
+                <Icon icon="tabler:circle-plus" width="35" color="#eee"/>
             </div>
         </div>
     </div>
@@ -177,10 +177,15 @@ const editWorkout = (id) => {
     font-size: 24px;
 }
 
-.phantom {
+.add-workout {
     position: absolute;
+    height: 3rem;
     width: calc(100% - 1.4rem);
-    margin-top: 0;
+    display: flex;
+    justify-content: space-between;
+    
+    border-radius: 4px;
+    margin: -0.2rem 0.5rem 0.8rem 0.5rem;
 }
 
 .workout-edit {
@@ -191,6 +196,7 @@ const editWorkout = (id) => {
 
 .centered {
     justify-content: center;
+    align-items: center;
 }
 
 .create-workout-window {

@@ -6,10 +6,10 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const profileDataCategories = ref([
-    {ref: "", icon: ""}, 
-    {ref: "", icon: "gym_progress.png"}, 
-    {ref: () => router.push('/gym-progress'), icon: "weight_progress.png"}, 
-    {ref: () => router.push('/settings'), icon: "settings.png"}
+    {ref: () => {}, icon: ""}, 
+    {ref: () => {}, icon: ""}, //tabler:scale-outline
+    {ref: () => router.push('/gym-progress'), icon: "tabler:device-desktop-up"}, 
+    {ref: () => router.push('/settings'), icon: "tabler:settings"}
 ]);
 const profileExpanded = ref(false);
 
@@ -22,8 +22,8 @@ const handleClick = (fun) => {
 
 <template>
     <div class="profile">
-        <CircularButton :size="50" icon="user.png" @click="profileExpanded = !profileExpanded"/>
-        <div :class="['profile-button', {'button-enabled': profileExpanded}]" v-for="item in profileDataCategories">
+        <CircularButton :size="50" icon="tabler:user" @click="profileExpanded = !profileExpanded"/>
+        <div class="profile-button" :style="{visibility: profileExpanded ? 'visible' : 'collapse'}" v-for="item in profileDataCategories">
             <CircularButton :size="40" :icon="item.icon" @click="handleClick(item.ref)"/>
         </div>
     </div>
@@ -31,21 +31,21 @@ const handleClick = (fun) => {
 
 <style scoped>
 .profile {
-    width: 50px;
-    justify-content: center;
     position: absolute;
     top: 3.5rem;
     right: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+    width: 50px;
 }
 
 .profile-button {
-    visibility: collapse;
-    margin: 10px 5px;
-    display: flex;
+    margin: 0;
+    padding: 0;
 }
-
-.button-enabled {
-    visibility: visible;
-}
-
 </style>
