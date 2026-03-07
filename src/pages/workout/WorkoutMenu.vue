@@ -8,7 +8,14 @@ import { createGesture } from '@ionic/vue';
 import { clamp } from '../../utils/math';
 import { queryDatabase } from '../../utils/database';
 
+const router = useRouter();
+
+// Refs
 const userWorkouts = ref([]);
+const featuredWorkoutID = ref(0);
+const workoutUnfinished = ref(false);
+
+// New workout menu
 const openNewWorkout = ref(false);
 const workoutName = ref('');
 
@@ -16,7 +23,6 @@ const workoutName = ref('');
 const allWorkoutsTranslation = ref(0);
 const allWorkoutsHandle = useTemplateRef('allWorkoutsRef');
 
-const router = useRouter();
 
 const verticalSwipeStart = (e) => {
 
@@ -34,10 +40,21 @@ const verticalSwipeEnd = (e) => {
     allWorkoutsTranslation.value = 0;
 };
 
-onMounted(() => {
-    queryDatabase('SELECT * FROM workoutTemplates').then((res) => {
-        userWorkouts.value = res.values;
-    });
+onMounted(async () => {
+    const res = await queryDatabase('SELECT * FROM workoutTemplates');
+    userWorkouts.value = res.values;
+
+    const currentWorkout = (await queryDatabase(`SELECT * FROM currentWorkout`)).values;
+    if (currentWorkout.length !== 0) {
+        workoutUnfinished.value = true;
+        featuredWorkoutID.value = () => { };
+        for (let i = 0; i < userWorkouts.value.length; i++) { 
+            if (userWorkouts.value[i].id === currentWorkout[0].id) {
+                featuredWorkoutID.value = i;
+                break; 
+            }
+        }
+    }
 
     const gesture = createGesture({
         el: allWorkoutsHandle.value,
@@ -80,9 +97,9 @@ const editWorkout = (id) => {
     <p class="title">Workouts</p>
     
     <div v-if="userWorkouts.length !== 0">
-        <p class="section-title">Next Workout</p>
-        <div class="quick-access-workout" @click="workoutPicked(userWorkouts[0].id)">
-            <p>{{ userWorkouts[0].name }}</p>
+        <p class="section-title">{{workoutUnfinished ? 'Resume Workout' : 'Next Workout'}}</p>
+        <div class="quick-access-workout" @click="workoutPicked(userWorkouts[featuredWorkoutID].id)">
+            <p>{{ userWorkouts[featuredWorkoutID].name }}</p>
         </div>
     </div>
 

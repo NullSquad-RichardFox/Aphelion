@@ -38,6 +38,8 @@ const addExercise = async (id) => {
 const retrieveStoredWorkout = async () => {
     const current = (await queryDatabase(`SELECT * FROM currentWorkout WHERE id=${isNumeric(workoutId.value) ? workoutId.value : -1}`)).values[0];
     
+    console.log('retrieved')
+
     workoutName.value = current.name;
     timerVal.value = current.timer;
     editMode.value = history.state.editMode === undefined ? Boolean(current.editMode) : history.state.editMode;
