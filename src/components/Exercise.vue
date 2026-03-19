@@ -125,8 +125,8 @@
     <div class="frame">
         <div style="margin: 0.5rem;">
             <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excercise.name }}</p>
-            <Icon v-if="titleTranslate >= 35" icon="tabler:trash" style="position: absolute; transform: translate(5px, -30px);" height="25" width="25"/>
-            <Icon v-if="titleTranslate <= -35" icon="tabler:calendar-week" style="position: absolute; transform: translate(-30px, -30px); right: 0;" height="25" width="25"/>
+            <Icon v-if="titleTranslate >= 35" icon="tabler:trash" style="position: fixed; transform: translate(5px, -30px);" height="25" width="25"/>
+            <Icon v-if="titleTranslate <= -35" icon="tabler:calendar-week" style="position: fixed; transform: translate(-30px, -30px); right: 0;" height="25" width="25"/>
         </div>
 
         <div class="header-decoration"></div>

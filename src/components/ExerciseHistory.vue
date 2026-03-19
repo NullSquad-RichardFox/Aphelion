@@ -21,10 +21,11 @@ const showExerciseHistory = async (id) => {
 
     for (const d of data) {
         let sets = [];
+        const date = new Date(d.date);
         for (let i = 0; i < d.weights.length; i++) {
             sets.push({reps: d.reps[i], weight: d.weights[i]})
         }
-        exerciseHistory.value.push({date: `${d.date.getDate()}.${d.date.getMonth() + 1}. ${d.date.getFullYear()}`, data: sets})
+        exerciseHistory.value.push({date: `${date.getDate()}.${date.getMonth() + 1}. ${date.getFullYear()}`, data: sets})
     }
 }
 
