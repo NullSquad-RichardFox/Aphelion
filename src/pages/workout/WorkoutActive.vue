@@ -14,6 +14,7 @@ const router = useRouter();
 // Exercise data
 let intervalId = null;
 const timerVal = ref(0);
+const timeString = ref("0:00")
 const editMode = ref(true);
 const workoutId = ref(route.params.id);
 const workoutName = ref('');
@@ -22,13 +23,6 @@ const workoutExercises = ref([]); // {id, name, sets: {reps: 12, weight: 0, acti
 // Exercise history
 const showHistory = ref(false);
 const showHistoryExerciseID = ref(0);
-
-const timeString = computed(() => {
-    const hours = Math.floor(timerVal.value / 3600);
-    const mins = Math.floor(timerVal.value / 60) - hours * 60;
-    const secs = timerVal.value % 60;
-    return hours == 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-});
 
 const addExercise = async (id) => {
     const res = await queryDatabase(`SELECT * FROM exercises WHERE id=${id}`);
@@ -155,8 +149,15 @@ onMounted(async () => {
     await loadWorkoutData();
     
     if (!editMode.value) {
+        timerVal.value = Date.now();
         intervalId = setInterval(() => {
-            timerVal.value++;
+            const now = Date.now();
+            const ms = now - timerVal.value;
+
+            const hours = Math.floor(ms / 3600000);
+            const mins = Math.floor(ms / 60000) - hours * 60;
+            const secs = Math.floor(ms / 1000) - mins * 60;
+            timeString.value = hours == 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }, 1000);
     }
 

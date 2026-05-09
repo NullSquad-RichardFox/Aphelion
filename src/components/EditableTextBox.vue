@@ -1,9 +1,13 @@
 <script setup>
+import { ref } from 'vue';
+
 const model = defineModel();
 const props = defineProps({
     auxiliaryText: String,
     type: String
 })
+
+const inputRef = ref();
 
 const setText = (e) => {
     if (props.type?.toLowerCase().trim() === 'number') {
@@ -13,11 +17,20 @@ const setText = (e) => {
     }
 }
 
+const selectAll = () => {
+    const range = document.createRange();
+    range.selectNodeContents(inputRef.value);
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
 </script>
 
 <template>
 <p>
-    <span role="textbox" contenteditable="true" @focusout="setText">
+    <span ref="inputRef" role="textbox" contenteditable="true" @focusout="setText" @click.stop="selectAll()">
         {{ model }}
     </span>
     {{ props.auxiliaryText }}
@@ -25,5 +38,7 @@ const setText = (e) => {
 </template>
 
 <style scoped>
-
+span {
+    padding: 5px;
+}
 </style>

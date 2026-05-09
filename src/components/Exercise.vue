@@ -35,6 +35,10 @@
         titleTranslate.value = 0;
     }
 
+    const disableScroll = (e) => {
+        e.preventDefault()
+    }
+
     const containerSwipeMove = (e) => {
         containerTranslate.value = clamp(e.deltaY, -40, 40);
     };
@@ -72,39 +76,30 @@
         containerSwipe.enable(true);
     });
 
-    watch(props.excercise?.sets, () => {
+    watch(props.excercise?.sets, async () => {
         for (let i = 0; i < props.excercise.sets.length; i++) {
             if (!props.excercise.sets[i].isWarmUp) {
                 lastWarmUpIndex.value = i - 1;
                 break;
             }
         }
+
+        const res = (await queryDatabase(`SELECT * FROM exercises WHERE id=${props.excercise.id}`)).values[0];
+        let ormMax = res.personalBest;
+        for (let i = 0; i < props.excercise.sets.length; i++) {
+            if (props.excercise.sets[i].isWarmUp) {
+                continue;
+            }
+
+            const currentORM = props.excercise.sets[i].weight * ( 1 + props.excercise.sets[i].reps / 30);
+            props.excercise.sets[i].isPr = currentORM > ormMax;
+            ormMax = Math.max(ormMax, currentORM);
+        }
     })
 
     const itemClicked = async (item) => {
         if (props.editMode) return;
-
-        if (!item.active) {
-            item.active = true;
-
-            // Check if PR
-            const res = (await queryDatabase(`SELECT * FROM exercises WHERE id=${props.excercise.id}`)).values[0];
-            const currentORM = item.weight * (1 + item.reps / 30); // epley formula for one rep max
-            let ormMax = res.personalBest;
-            const thisIndex = props.excercise.sets.indexOf(item);
-            for (let i = 0; i < thisIndex; i++) {
-                if (props.excercise.sets[i].active) {
-                    ormMax = Math.max(ormMax, props.excercise.sets[i].weight * (1 + props.excercise.sets[i].reps / 30));
-                }
-            }
-
-            if (currentORM > ormMax) {
-                item.isPr = true;
-            }
-        } else {
-            item.active = false;
-            item.isPr = false;
-        }
+        item.active = !item.active;
     }
 
     const addSet = (warmUp) => {
@@ -122,11 +117,11 @@
 </script>
 
 <template>
-    <div class="frame">
-        <div style="margin: 0.5rem;">
+    <div class="frame" @touchstart="disableScroll">
+        <div style="margin: 0.5rem; position: relative;">
             <p ref="titleRef" class="title" :style="{'transform': 'translateX(' + titleTranslate + 'px)'}">{{ props.excercise.name }}</p>
-            <Icon v-if="titleTranslate >= 35" icon="tabler:trash" style="position: fixed; transform: translate(5px, -30px);" height="25" width="25"/>
-            <Icon v-if="titleTranslate <= -35" icon="tabler:calendar-week" style="position: fixed; transform: translate(-30px, -30px); right: 0;" height="25" width="25"/>
+            <Icon v-if="titleTranslate >= 35" icon="tabler:trash" style="position: absolute; top: 7px;" height="25" width="25"/>
+            <Icon v-if="titleTranslate <= -35" icon="tabler:calendar-week" style="position: absolute; top: 7px; right: 0;" height="25" width="25"/>
         </div>
 
         <div class="header-decoration"></div>
@@ -135,7 +130,7 @@
             <ListItem 
             v-for="(item, index) in props.excercise.sets" 
             class="set" 
-            :class="[{'glass': item.active && !item.isPr},{'glass-accent': item.isPr}]" 
+            :class="[{'glass': item.active && !item.isPr},{'glass-accent': item.active && item.isPr}]" 
             :enable-gesture="true" 
             :translation-y="containerTranslate" 
             :max-displacement="[40, 0]"
