@@ -34,11 +34,17 @@ const pushNotification = async () => {
 
 <div>
     <p>Suplements</p>
-    <button style="width: 100px; height: 60px;" @click="pushNotification">click</button>
+    <div>
+        <ListItem>
+            <input type="checkbox" />
+            <p>Name</p>
+        </ListItem> 
+    </div>
 </div>
 
 <div>
     <p>Weight</p>
+    <input type='text' placeholder="Add today's weight"/>
 </div>
 
 <div>
