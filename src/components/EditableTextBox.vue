@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 
 const model = defineModel();
 const props = defineProps({
@@ -8,6 +8,7 @@ const props = defineProps({
 })
 
 const inputRef = ref();
+const keyboardHandle = inject('numeric-keyboard')
 
 const setText = (e) => {
     if (props.type?.toLowerCase().trim() === 'number') {
@@ -15,6 +16,13 @@ const setText = (e) => {
     } else {
         model.value = e.target.innerText.trim();
     }
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+}
+
+function onValueChanged() {
+    console.log('textbox')
 }
 
 const selectAll = () => {
@@ -24,6 +32,9 @@ const selectAll = () => {
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
+
+    keyboardHandle.keyboardModel.value = model;
+    keyboardHandle.keyboardVisible.value = true;
 }
 
 </script>

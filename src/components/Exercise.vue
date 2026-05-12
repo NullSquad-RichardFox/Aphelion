@@ -34,11 +34,7 @@
 
         titleTranslate.value = 0;
     }
-
-    const disableScroll = (e) => {
-        e.preventDefault()
-    }
-
+    
     const containerSwipeMove = (e) => {
         containerTranslate.value = clamp(e.deltaY, -40, 40);
     };

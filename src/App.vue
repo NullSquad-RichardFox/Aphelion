@@ -2,12 +2,17 @@
 import Footer from './components/Footer.vue'
 import Profile from './components/Profile.vue';
 
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { closeDatabase } from './utils/database';
 
+import NumericKeyboard from './components/NumericKeyboard.vue';
+
 const router = useRouter();
 const showControlUI = ref(true);
+
+const keyboardVisible = ref(false);
+const keyboardModel = ref(null);
 
 router.beforeEach((to, from) => {
     if ((to.path.endsWith('/search') || to.path.endsWith('/creator')) && to.path.startsWith('/workout')) {
@@ -21,7 +26,7 @@ onUnmounted(() => {
   closeDatabase();
 })
 
-
+provide('numeric-keyboard', { keyboardModel, keyboardVisible });
 
 </script>
 
@@ -32,6 +37,8 @@ onUnmounted(() => {
 
     <Profile v-if="showControlUI"/>
     <Footer v-if="showControlUI"/>
+
+    <NumericKeyboard v-if="false"/>
 </template>
 
 <style scoped> 
