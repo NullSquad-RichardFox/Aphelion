@@ -1,5 +1,6 @@
 <script setup>
 import ListItem from '../../components/ListItem.vue';
+import InteractiveList from '../../components/InteractiveList.vue';
 import ControlPanel from '../../components/Control Panel.vue';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
@@ -19,27 +20,6 @@ const workoutUnfinished = ref(false);
 const openNewWorkout = ref(false);
 const workoutName = ref('');
 
-// Gestures
-const allWorkoutsTranslation = ref(0);
-const allWorkoutsHandle = useTemplateRef('allWorkoutsRef');
-
-
-const verticalSwipeStart = (e) => {
-
-};
-
-const verticalSwipeMove = (e) => {
-    allWorkoutsTranslation.value = clamp(e.deltaY, -50, 0);
-};
-
-const verticalSwipeEnd = (e) => {
-    if (allWorkoutsTranslation.value <= -50) {
-        openNewWorkout.value = true;
-    }
-
-    allWorkoutsTranslation.value = 0;
-};
-
 onMounted(async () => {
     const res = await queryDatabase('SELECT * FROM workoutTemplates');
     userWorkouts.value = res.values;
@@ -55,18 +35,6 @@ onMounted(async () => {
             }
         }
     }
-
-    const gesture = createGesture({
-        el: allWorkoutsHandle.value,
-        threshold: 10,
-        direction: 'y',
-        gestureName: 'vertical-swipe',
-        onStart: (e) => verticalSwipeStart(e),
-        onMove: (e) => verticalSwipeMove(e),
-        onEnd: (e) => verticalSwipeEnd(e)
-    });
-
-    gesture.enable(true);
 });
 
 const createWorkout = () => {
@@ -76,18 +44,17 @@ const createWorkout = () => {
     router.push({ path: `/workout/${workoutName.value}`, state: { editMode: true }});
 };
 
-const workoutPicked = (id) => {
-    router.push({ path: `/workout/${id}`, state: { editMode: false }});
+const workoutPicked = (workout, index) => {
+    router.push({ path: `/workout/${workout.id}`, state: { editMode: false }});
 }
 
-const removeWorkout = async (item) => {
-    const id = userWorkouts.value.indexOf(item);
-    await queryDatabase(`DELETE FROM workoutTemplates WHERE id=${userWorkouts.value[id].id}`);
-    userWorkouts.value.splice(id, 1);
+const removeWorkout = async (workout, index) => {
+    await queryDatabase(`DELETE FROM workoutTemplates WHERE id=${workout.id}`);
+    userWorkouts.value.splice(index, 1);
 }
 
-const editWorkout = (id) => {
-    router.push({ path: `/workout/${id}`, state: { editMode: true }});
+const editWorkout = (workout, index) => {
+    router.push({ path: `/workout/${workout.id}`, state: { editMode: true }});
 }
 
 </script>
@@ -105,19 +72,27 @@ const editWorkout = (id) => {
 
     <div>
         <p class="section-title">My Workouts</p>
-        <div class="all-workouts" ref="allWorkoutsRef">
-            <ListItem class="workout-item" v-for="item in userWorkouts" @click="workoutPicked(item.id)" :translation-y="allWorkoutsTranslation" :enable-gesture="true" :max-displacement="[50,50]" :icons="['tabler:trash', 'tabler:pencil']" @swipe-right="removeWorkout(item)" @swipe-left="editWorkout(item.id)">
-                <p>{{ item.name }}</p>
+        <InteractiveList class="all-workouts"
+            :list="userWorkouts" 
+            :icon-size="35" 
+            :max-swipe-up="42"
+            :max-swipe-down="0"
+            @swipe-up="openNewWorkout = true"
+            v-slot="{ translationY }"
+        >
+            <ListItem class="workout-item"     
+                v-for="(item, index) in userWorkouts"
+                @click="workoutPicked(item, index)"
+                @swipe-left="editWorkout(item, index)"
+                @swipe-right="removeWorkout(item, index)"
+                :enable-gesture="true" 
+                :max-displacement="[50, 50]"
+                :icons="['tabler:trash', 'tabler:pencil']"
+                :translation-y="translationY" 
+            >
+                <p class="workout-inner">{{item.name}}</p>
             </ListItem>
-
-            <div v-if="userWorkouts.length === 0" class="workout-item centered" @click="openNewWorkout = true">
-                <Icon icon="tabler:circle-plus" width="35" color="#eee"/>
-            </div>
-
-            <div v-if="allWorkoutsTranslation <= -42" class="add-workout centered" :style="{'transform':'translateY(' + allWorkoutsTranslation + 'px)'}">
-                <Icon icon="tabler:circle-plus" width="35" color="#eee"/>
-            </div>
-        </div>
+        </InteractiveList>
     </div>
 
     <div class="create-workout-window" v-if="openNewWorkout">
@@ -182,35 +157,19 @@ const editWorkout = (id) => {
 
 .workout-item {
     display: flex;
-    justify-content: space-between;
     height: 3rem;
-
+    
     margin: 0.8rem 0.5rem;
-
+    
     background-color: #80808029;
     border-radius: 4px;
+    
+    justify-content: space-between;
 }
 
-.workout-item p {
+.workout-inner {
     margin: 0.2rem 0.5rem;
     font-size: 24px;
-}
-
-.add-workout {
-    display: flex;
-    justify-content: space-between;
-    height: 3rem;
-
-    border-radius: 4px;
-
-    margin: -0.2rem 0.5rem 0.8rem 0.5rem;
-    position: absolute;
-    width: calc(100% - 1.4rem);
-}
-
-.centered {
-    justify-content: center;
-    align-items: center;
 }
 
 .create-workout-window {

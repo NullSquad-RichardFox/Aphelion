@@ -1,11 +1,12 @@
 <script setup>
-    import ListItem from './ListItem.vue';
-    import EditableTextBox from './EditableTextBox.vue';
-    import { Icon } from '@iconify/vue';
-    import { onMounted, useTemplateRef, ref, watch } from 'vue'
-    import { createGesture } from '@ionic/vue';
-    import { clamp } from '../utils/math';
-    import { queryDatabase } from '../utils/database';
+import ListItem from './ListItem.vue';
+import EditableTextBox from './EditableTextBox.vue';
+import InteractiveList from './InteractiveList.vue';
+import { Icon } from '@iconify/vue';
+import { onMounted, useTemplateRef, ref, watch } from 'vue'
+import { createGesture } from '@ionic/vue';
+import { clamp } from '../utils/math';
+import { queryDatabase } from '../utils/database';
     
     const props = defineProps({
         excercise: Object, // {id, name, sets: {reps: 12, weight: 0, active: false, isPr: false, isWarmUp: warmUp}}
@@ -17,9 +18,7 @@
 
     const lastWarmUpIndex = ref(-1);
     const titleTranslate = ref(0);
-    const containerTranslate = ref(0);
     const titleHandle = useTemplateRef('titleRef');
-    const containerHandle = useTemplateRef('setContainer');
 
     const titleSwipeMove = (e) => {
         titleTranslate.value = clamp(e.deltaX, -40, 40);
@@ -34,20 +33,6 @@
 
         titleTranslate.value = 0;
     }
-    
-    const containerSwipeMove = (e) => {
-        containerTranslate.value = clamp(e.deltaY, -40, 40);
-    };
-
-    const containerSwipeEnd = (e) => {
-        if (containerTranslate.value <= -34) {
-            addSet(false);
-        } else if (containerTranslate.value >= 34) {
-            addSet(true);
-        }
-
-        containerTranslate.value = 0;
-    };
 
     onMounted(() => {
         const titleSwipe = createGesture({
@@ -58,18 +43,8 @@
             onMove: (e) => titleSwipeMove(e),
             onEnd: (e) => titleSwipeEnd(e)
         });
-
-        const containerSwipe = createGesture({
-            el: containerHandle.value,
-            threshold: 10,
-            direction: 'y',
-            gestureName: 'container-swipe',
-            onMove: (e) => containerSwipeMove(e),
-            onEnd: (e) => containerSwipeEnd(e)
-        });
         
         titleSwipe.enable(true);
-        containerSwipe.enable(true);
     });
 
     watch(props.excercise?.sets, async () => {
@@ -122,35 +97,30 @@
 
         <div class="header-decoration"></div>
 
-        <div class="container" ref="setContainer">
-            <ListItem 
-            v-for="(item, index) in props.excercise.sets" 
-            class="set" 
-            :class="[{'glass': item.active && !item.isPr},{'glass-accent': item.active && item.isPr}]" 
-            :enable-gesture="true" 
-            :translation-y="containerTranslate" 
-            :max-displacement="[40, 0]"
-            :icons="['tabler:trash', '']"
-            @click="itemClicked(item)"
-            @swipe-right="deleteSet(index)"
+        <InteractiveList class="container"
+            :list="props.excercise.sets"
+            :icon-size="25"
+            :max-swipe-up="34"
+            :max-swipe-down="34"
+            @swipe-up="addSet(false)"
+            @swipe-down="addSet(true)"
+            v-slot="{ translationY }"
+        >
+            <ListItem class="set" 
+                v-for="(item, index) in props.excercise.sets"
+                :class="[{'glass': item.active && !item.isPr},{'glass-accent': item.active && item.isPr}]"     
+                @click="itemClicked(item)"
+                @swipe-right="deleteSet(index)"
+                :enable-gesture="true" 
+                :max-displacement="[40, 0]"
+                :icons="['tabler:trash', '']"
+                :translation-y="translationY" 
             >
                 <p class="item-text" :class="{'warm-up-text': item.isWarmUp}">{{ item.isWarmUp ? index + 1 : index - lastWarmUpIndex }}</p>
                 <EditableTextBox class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-model="item.reps" :auxiliary-text="' reps'" type="number"/>
                 <EditableTextBox v-if="!editMode" class="item-text" :class="{'warm-up-text': item.isWarmUp}" v-model="item.weight" :auxiliary-text="'kg'" type="number"/> 
             </ListItem>
-
-            <div v-if="containerTranslate <= -34" class="set phantom" :style="{'transform':'translateY(' + containerTranslate + 'px)'}">
-                <Icon icon="tabler:circle-plus" width="25" height="25" />
-            </div>
-
-            <div v-if="containerTranslate >= 34" class="set phantom" style="top:0;">
-                <Icon icon="tabler:circle-dashed-plus" width="25" height="25" />
-            </div>
-            
-            <div v-if="props.excercise.sets.length == 0" style="display: flex; justify-content: center; align-items: center;" @click="addSet(false)">
-                <Icon icon="tabler:circle-plus" width="25" height="25" />
-            </div>
-        </div>
+        </InteractiveList>
     </div>
 </template>
 

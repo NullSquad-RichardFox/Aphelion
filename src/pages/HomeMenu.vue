@@ -1,28 +1,11 @@
 <script setup>
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { ref } from 'vue';
+import InteractiveList from '../components/InteractiveList.vue';
+import ListItem from '../components/ListItem.vue';
+
+const suplements = ref([{name: 'Creatine', time: Date.now(), checkedToday: false}]);
 
 
-const pushNotification = async () => {
-    const permissions = await LocalNotifications.checkPermissions();
-    
-    if (permissions.display === 'prompt') {
-        const res = await LocalNotifications.requestPermissions();
-    }
-
-    await LocalNotifications.schedule({
-        notifications: [{
-            id: 1,
-            title: "Test title",
-            body: "test body",
-            schedule: {
-                every: 'minute'
-            }
-        }]
-    })
-
-    const x = await LocalNotifications.getPending();
-    console.log(x);
-}
 
 
 </script>
@@ -30,16 +13,30 @@ const pushNotification = async () => {
 <template>
 <p class="title">Aphelion</p>
 
-<p>New workout</p>
-
 <div>
     <p>Suplements</p>
-    <div>
-        <ListItem>
-            <input type="checkbox" />
-            <p>Name</p>
-        </ListItem> 
-    </div>
+    <InteractiveList class="list-container"
+        :list="suplements"
+        :icon-size="25"
+        :max-swipe-up="34"
+        :max-swipe-down="0"
+        @swipe-up=""
+        v-slot="{ translationY }"    
+    >
+        <ListItem class="list-item"
+            v-for="(item, index) in suplements"
+            @click=""
+            @swipe-right=""
+            @swipe-left=""
+            :enable-gesture="true" 
+            :max-displacement="[40, 40]"
+            :icons="['tabler:trash', 'tabler:pencil']"
+            :translation-y="translationY" 
+        >
+            <input type="checkbox" v-model="item.checkedToday" @click="console.log(item)" />
+            <p>{{ item.name }}</p>
+        </ListItem>
+    </InteractiveList>
 </div>
 
 <div>
@@ -49,6 +46,7 @@ const pushNotification = async () => {
 
 <div>
     <p>Sleep</p>
+    <p>Set up integration with another platform</p>
 </div>
 
 </template>
@@ -59,4 +57,17 @@ const pushNotification = async () => {
     text-align: left;
     margin-top: 1.2rem;
 }
+
+.list-container {
+    position: relative;
+    margin: 0.5rem;
+    margin-left: 1.5rem;
+    overflow: hidden;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+}
+
 </style>
